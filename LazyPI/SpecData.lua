@@ -1,77 +1,93 @@
 -- LazyPI Specialization Data
--- Contains all class specializations with their IDs and default priority values
+-- Contains all DPS class specializations with their IDs
 
 local addonName, addon = ...
 
--- Specialization IDs from the game
--- Format: [specID] = { name = "Spec Name", class = "CLASS", role = "role", defaultPriority = number }
--- Higher priority number = more valuable target for Power Infusion
+-- Specialization IDs from the game (DPS specs only)
+-- Format: [specID] = { name = "Spec Name", class = "CLASS" }
 
 addon.SpecInfo = {
     -- Death Knight
-    [250] = { name = "Blood", class = "DEATHKNIGHT", role = "TANK", defaultPriority = 0 },
-    [251] = { name = "Frost", class = "DEATHKNIGHT", role = "DAMAGER", defaultPriority = 50 },
-    [252] = { name = "Unholy", class = "DEATHKNIGHT", role = "DAMAGER", defaultPriority = 55 },
+    [251] = { name = "Frost", class = "DEATHKNIGHT" },
+    [252] = { name = "Unholy", class = "DEATHKNIGHT" },
 
     -- Demon Hunter
-    [577] = { name = "Havoc", class = "DEMONHUNTER", role = "DAMAGER", defaultPriority = 45 },
-    [581] = { name = "Vengeance", class = "DEMONHUNTER", role = "TANK", defaultPriority = 0 },
+    [577] = { name = "Havoc", class = "DEMONHUNTER" },
 
     -- Druid
-    [102] = { name = "Balance", class = "DRUID", role = "DAMAGER", defaultPriority = 70 },
-    [103] = { name = "Feral", class = "DRUID", role = "DAMAGER", defaultPriority = 40 },
-    [104] = { name = "Guardian", class = "DRUID", role = "TANK", defaultPriority = 0 },
-    [105] = { name = "Restoration", class = "DRUID", role = "HEALER", defaultPriority = 0 },
+    [102] = { name = "Balance", class = "DRUID" },
+    [103] = { name = "Feral", class = "DRUID" },
 
     -- Evoker
-    [1467] = { name = "Devastation", class = "EVOKER", role = "DAMAGER", defaultPriority = 65 },
-    [1468] = { name = "Preservation", class = "EVOKER", role = "HEALER", defaultPriority = 0 },
-    [1473] = { name = "Augmentation", class = "EVOKER", role = "DAMAGER", defaultPriority = 75 },
+    [1467] = { name = "Devastation", class = "EVOKER" },
+    [1473] = { name = "Augmentation", class = "EVOKER" },
 
     -- Hunter
-    [253] = { name = "Beast Mastery", class = "HUNTER", role = "DAMAGER", defaultPriority = 35 },
-    [254] = { name = "Marksmanship", class = "HUNTER", role = "DAMAGER", defaultPriority = 40 },
-    [255] = { name = "Survival", class = "HUNTER", role = "DAMAGER", defaultPriority = 35 },
+    [253] = { name = "Beast Mastery", class = "HUNTER" },
+    [254] = { name = "Marksmanship", class = "HUNTER" },
+    [255] = { name = "Survival", class = "HUNTER" },
 
     -- Mage
-    [62] = { name = "Arcane", class = "MAGE", role = "DAMAGER", defaultPriority = 100 },
-    [63] = { name = "Fire", class = "MAGE", role = "DAMAGER", defaultPriority = 80 },
-    [64] = { name = "Frost", class = "MAGE", role = "DAMAGER", defaultPriority = 60 },
+    [62] = { name = "Arcane", class = "MAGE" },
+    [63] = { name = "Fire", class = "MAGE" },
+    [64] = { name = "Frost", class = "MAGE" },
 
     -- Monk
-    [268] = { name = "Brewmaster", class = "MONK", role = "TANK", defaultPriority = 0 },
-    [270] = { name = "Mistweaver", class = "MONK", role = "HEALER", defaultPriority = 0 },
-    [269] = { name = "Windwalker", class = "MONK", role = "DAMAGER", defaultPriority = 45 },
+    [269] = { name = "Windwalker", class = "MONK" },
 
     -- Paladin
-    [65] = { name = "Holy", class = "PALADIN", role = "HEALER", defaultPriority = 0 },
-    [66] = { name = "Protection", class = "PALADIN", role = "TANK", defaultPriority = 0 },
-    [70] = { name = "Retribution", class = "PALADIN", role = "DAMAGER", defaultPriority = 55 },
+    [70] = { name = "Retribution", class = "PALADIN" },
 
     -- Priest
-    [256] = { name = "Discipline", class = "PRIEST", role = "HEALER", defaultPriority = 0 },
-    [257] = { name = "Holy", class = "PRIEST", role = "HEALER", defaultPriority = 0 },
-    [258] = { name = "Shadow", class = "PRIEST", role = "DAMAGER", defaultPriority = 70 },
+    [258] = { name = "Shadow", class = "PRIEST" },
 
     -- Rogue
-    [259] = { name = "Assassination", class = "ROGUE", role = "DAMAGER", defaultPriority = 50 },
-    [260] = { name = "Outlaw", class = "ROGUE", role = "DAMAGER", defaultPriority = 45 },
-    [261] = { name = "Subtlety", class = "ROGUE", role = "DAMAGER", defaultPriority = 55 },
+    [259] = { name = "Assassination", class = "ROGUE" },
+    [260] = { name = "Outlaw", class = "ROGUE" },
+    [261] = { name = "Subtlety", class = "ROGUE" },
 
     -- Shaman
-    [262] = { name = "Elemental", class = "SHAMAN", role = "DAMAGER", defaultPriority = 65 },
-    [263] = { name = "Enhancement", class = "SHAMAN", role = "DAMAGER", defaultPriority = 50 },
-    [264] = { name = "Restoration", class = "SHAMAN", role = "HEALER", defaultPriority = 0 },
+    [262] = { name = "Elemental", class = "SHAMAN" },
+    [263] = { name = "Enhancement", class = "SHAMAN" },
 
     -- Warlock
-    [265] = { name = "Affliction", class = "WARLOCK", role = "DAMAGER", defaultPriority = 85 },
-    [266] = { name = "Demonology", class = "WARLOCK", role = "DAMAGER", defaultPriority = 75 },
-    [267] = { name = "Destruction", class = "WARLOCK", role = "DAMAGER", defaultPriority = 70 },
+    [265] = { name = "Affliction", class = "WARLOCK" },
+    [266] = { name = "Demonology", class = "WARLOCK" },
+    [267] = { name = "Destruction", class = "WARLOCK" },
 
     -- Warrior
-    [71] = { name = "Arms", class = "WARRIOR", role = "DAMAGER", defaultPriority = 50 },
-    [72] = { name = "Fury", class = "WARRIOR", role = "DAMAGER", defaultPriority = 55 },
-    [73] = { name = "Protection", class = "WARRIOR", role = "TANK", defaultPriority = 0 },
+    [71] = { name = "Arms", class = "WARRIOR" },
+    [72] = { name = "Fury", class = "WARRIOR" },
+}
+
+-- Default priority order (best to worst)
+addon.DefaultPriorityOrder = {
+    62,   -- Arcane Mage
+    265,  -- Affliction Warlock
+    63,   -- Fire Mage
+    266,  -- Demonology Warlock
+    1473, -- Augmentation Evoker
+    102,  -- Balance Druid
+    258,  -- Shadow Priest
+    267,  -- Destruction Warlock
+    1467, -- Devastation Evoker
+    262,  -- Elemental Shaman
+    64,   -- Frost Mage
+    252,  -- Unholy Death Knight
+    72,   -- Fury Warrior
+    70,   -- Retribution Paladin
+    261,  -- Subtlety Rogue
+    251,  -- Frost Death Knight
+    259,  -- Assassination Rogue
+    71,   -- Arms Warrior
+    263,  -- Enhancement Shaman
+    269,  -- Windwalker Monk
+    577,  -- Havoc Demon Hunter
+    260,  -- Outlaw Rogue
+    103,  -- Feral Druid
+    254,  -- Marksmanship Hunter
+    253,  -- Beast Mastery Hunter
+    255,  -- Survival Hunter
 }
 
 -- Class colors for UI display
@@ -89,48 +105,6 @@ addon.ClassColors = {
     SHAMAN = { r = 0.00, g = 0.44, b = 0.87 },
     WARLOCK = { r = 0.53, g = 0.53, b = 0.93 },
     WARRIOR = { r = 0.78, g = 0.61, b = 0.43 },
-}
-
--- Get sorted list of specs by class for UI
-function addon:GetSpecsByClass()
-    local specsByClass = {}
-
-    for specID, info in pairs(self.SpecInfo) do
-        if not specsByClass[info.class] then
-            specsByClass[info.class] = {}
-        end
-        table.insert(specsByClass[info.class], {
-            specID = specID,
-            name = info.name,
-            role = info.role,
-        })
-    end
-
-    -- Sort specs within each class alphabetically
-    for class, specs in pairs(specsByClass) do
-        table.sort(specs, function(a, b)
-            return a.name < b.name
-        end)
-    end
-
-    return specsByClass
-end
-
--- Class display order for UI
-addon.ClassOrder = {
-    "DEATHKNIGHT",
-    "DEMONHUNTER",
-    "DRUID",
-    "EVOKER",
-    "HUNTER",
-    "MAGE",
-    "MONK",
-    "PALADIN",
-    "PRIEST",
-    "ROGUE",
-    "SHAMAN",
-    "WARLOCK",
-    "WARRIOR",
 }
 
 -- Localized class names

@@ -1,25 +1,24 @@
 # LazyPI
 
-A World of Warcraft addon that automatically manages a Power Infusion macro, targeting the most valuable player in your group based on specialization priorities.
+A World of Warcraft addon that automatically manages a Power Infusion macro, targeting the most valuable DPS player in your group based on a customizable priority list.
 
 ## Features
 
-- **Automatic Target Selection** - Analyzes group/raid members and identifies the highest-priority target based on their specialization
+- **Automatic Target Selection** - Analyzes group/raid members and identifies the highest-priority DPS target
 - **Dynamic Macro Management** - Creates and updates a "LazyPI" macro that targets the optimal player
-- **Customizable Priorities** - Adjust priority values (0-100) for all 38 specializations
+- **Drag-and-Drop Priority List** - Reorder DPS specs using up/down arrows to set your preferred priority
 - **Live Updates** - Automatically re-evaluates targets when:
   - Group roster changes
   - Player specializations change
   - Entering new zones
 - **Smart Fallback** - When no priority target exists, defaults to mouseover → target → self
-- **Settings Panel** - Full GUI for adjusting all options and spec priorities
+- **DPS Only** - Only considers DPS specializations (tanks and healers are excluded)
 
 ## Installation
 
 1. Download and extract the `LazyPI` folder
 2. Place it in your WoW addons directory:
    - **Retail**: `World of Warcraft/_retail_/Interface/AddOns/`
-   - **Classic**: `World of Warcraft/_classic_/Interface/AddOns/`
 3. Restart WoW or reload your UI (`/reload`)
 4. The addon will automatically create a "LazyPI" macro
 
@@ -54,34 +53,39 @@ Open the settings panel with `/lpi` to configure:
 
 - **Enable/Disable** - Toggle the addon on or off
 - **Auto-Update Macro** - Automatically update when group composition changes
-- **Include Self** - Include yourself as a potential target (useful for Shadow Priests)
-- **Specialization Priorities** - Sliders for each spec (0-100)
-  - `0` = Never target this spec
-  - `1-99` = Variable priority
-  - `100` = Highest priority
+- **Include Self** - Include yourself as a potential target
+- **Priority List** - Use the up/down arrows to reorder specs
+  - Specs at the top of the list have highest priority
+  - Move specs up or down to customize targeting order
 
 The settings panel can also be accessed via WoW's Interface Options menu.
 
-## Default Priorities
+## Default Priority Order
 
-The addon comes with sensible defaults based on typical Power Infusion value:
+The addon comes with a default priority order based on typical Power Infusion value:
 
-| Priority | Specializations |
-|----------|-----------------|
-| **Highest (70-100)** | Arcane Mage, Affliction Warlock, Fire Mage, Demonology Warlock, Augmentation Evoker |
-| **High (65-70)** | Balance Druid, Shadow Priest, Destruction Warlock, Devastation Evoker, Elemental Shaman |
-| **Medium (45-60)** | Most other DPS specs |
-| **Low/None (0)** | Tanks and Healers |
+1. Arcane Mage
+2. Affliction Warlock
+3. Fire Mage
+4. Demonology Warlock
+5. Augmentation Evoker
+6. Balance Druid
+7. Shadow Priest
+8. Destruction Warlock
+9. Devastation Evoker
+10. Elemental Shaman
+11. *(and more...)*
 
-All priorities can be customized to match your group's needs.
+All priorities can be customized by reordering the list in the settings panel.
 
 ## How It Works
 
 1. When you join a group, the addon inspects each member to determine their specialization
-2. Members are sorted by their spec's priority value
-3. The highest-priority living player becomes the macro target
-4. The macro is updated with `/cast [@PlayerName] Power Infusion`
-5. When the target leaves or dies, the addon automatically selects the next best target
+2. Only DPS specs are considered (tanks and healers are ignored)
+3. Members are sorted by their spec's position in your priority list
+4. The highest-ranked living DPS player becomes the macro target
+5. The macro is updated with `/cast [@PlayerName] Power Infusion`
+6. When the target leaves or dies, the addon automatically selects the next best target
 
 ## Requirements
 

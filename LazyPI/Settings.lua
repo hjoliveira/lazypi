@@ -1,11 +1,120 @@
 -- LazyPI Settings Panel
--- Configuration UI for specialization priorities
+-- Configuration UI with priority list and up/down arrows
 
 local addonName, addon = ...
 
 -- Settings frame reference
 local settingsFrame = nil
-local specSliders = {}
+local specRows = {}
+
+-- Move a spec up or down in the priority list
+local function MoveSpec(specID, direction)
+    local order = LazyPIDB.specPriorityOrder
+    local currentIndex = nil
+
+    for i, id in ipairs(order) do
+        if id == specID then
+            currentIndex = i
+            break
+        end
+    end
+
+    if not currentIndex then return end
+
+    local newIndex = currentIndex + direction
+    if newIndex < 1 or newIndex > #order then return end
+
+    -- Swap positions
+    order[currentIndex], order[newIndex] = order[newIndex], order[currentIndex]
+
+    -- Update display and macro
+    addon:RefreshSettingsUI()
+    addon:UpdateBestTarget()
+end
+
+-- Refresh the settings UI to reflect current order
+function addon:RefreshSettingsUI()
+    if not settingsFrame or not settingsFrame:IsShown() then return end
+
+    local scrollChild = settingsFrame.scrollChild
+    local rowHeight = 24
+    local yOffset = 0
+
+    -- Hide all existing rows first
+    for _, row in pairs(specRows) do
+        row:Hide()
+    end
+
+    -- Recreate rows in current priority order
+    for i, specID in ipairs(LazyPIDB.specPriorityOrder) do
+        local specInfo = addon.SpecInfo[specID]
+        if specInfo then
+            local row = specRows[specID]
+
+            if not row then
+                -- Create new row frame
+                row = CreateFrame("Frame", nil, scrollChild)
+                row:SetSize(360, rowHeight)
+
+                -- Rank number
+                row.rank = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                row.rank:SetPoint("LEFT", 5, 0)
+                row.rank:SetWidth(30)
+                row.rank:SetJustifyH("RIGHT")
+
+                -- Spec name with class color
+                row.specName = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                row.specName:SetPoint("LEFT", 45, 0)
+                row.specName:SetWidth(180)
+                row.specName:SetJustifyH("LEFT")
+
+                -- Up button
+                row.upBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+                row.upBtn:SetSize(24, 20)
+                row.upBtn:SetPoint("LEFT", row.specName, "RIGHT", 10, 0)
+                row.upBtn:SetText("\226\150\178")  -- Unicode up triangle
+                row.upBtn.specID = specID
+                row.upBtn:SetScript("OnClick", function(self)
+                    MoveSpec(self.specID, -1)
+                end)
+
+                -- Down button
+                row.downBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+                row.downBtn:SetSize(24, 20)
+                row.downBtn:SetPoint("LEFT", row.upBtn, "RIGHT", 5, 0)
+                row.downBtn:SetText("\226\150\188")  -- Unicode down triangle
+                row.downBtn.specID = specID
+                row.downBtn:SetScript("OnClick", function(self)
+                    MoveSpec(self.specID, 1)
+                end)
+
+                specRows[specID] = row
+            end
+
+            -- Update row content
+            local classColor = addon.ClassColors[specInfo.class]
+            row.rank:SetText(i .. ".")
+            row.specName:SetText(specInfo.name .. " " .. addon.ClassNames[specInfo.class])
+            row.specName:SetTextColor(classColor.r, classColor.g, classColor.b)
+
+            -- Enable/disable buttons based on position
+            row.upBtn:SetEnabled(i > 1)
+            row.downBtn:SetEnabled(i < #LazyPIDB.specPriorityOrder)
+
+            -- Position and show row
+            row:SetPoint("TOPLEFT", 10, -yOffset)
+            row:Show()
+
+            yOffset = yOffset + rowHeight
+        end
+    end
+
+    -- Update scroll child height
+    scrollChild:SetHeight(yOffset + 20)
+
+    -- Update target display
+    settingsFrame:UpdateTargetDisplay()
+end
 
 -- Create the main settings frame
 local function CreateSettingsFrame()
@@ -15,7 +124,7 @@ local function CreateSettingsFrame()
 
     -- Main frame
     local frame = CreateFrame("Frame", "LazyPISettingsFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(700, 600)
+    frame:SetSize(420, 550)
     frame:SetPoint("CENTER")
     frame:SetMovable(true)
     frame:EnableMouse(true)
@@ -38,7 +147,7 @@ local function CreateSettingsFrame()
     -- Title
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -20)
-    title:SetText("LazyPI - Power Infusion Target Priority")
+    title:SetText("LazyPI - Priority List")
 
     -- Close button
     local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
@@ -78,7 +187,7 @@ local function CreateSettingsFrame()
     includeSelfCheck:SetPoint("TOPLEFT", autoUpdateCheck, "BOTTOMLEFT", 0, 0)
     includeSelfCheck.text = includeSelfCheck:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     includeSelfCheck.text:SetPoint("LEFT", includeSelfCheck, "RIGHT", 5, 0)
-    includeSelfCheck.text:SetText("Include self as potential target (for Shadow Priests)")
+    includeSelfCheck.text:SetText("Include self as potential target")
     includeSelfCheck:SetScript("OnClick", function(self)
         LazyPIDB.includeSelf = self:GetChecked()
         addon:UpdateBestTarget()
@@ -90,7 +199,7 @@ local function CreateSettingsFrame()
     -- Update button
     local updateButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     updateButton:SetSize(120, 25)
-    updateButton:SetPoint("TOPLEFT", 350, -55)
+    updateButton:SetPoint("TOPLEFT", 25, -145)
     updateButton:SetText("Update Macro")
     updateButton:SetScript("OnClick", function()
         addon:RequestGroupInspect()
@@ -111,114 +220,20 @@ local function CreateSettingsFrame()
 
     -- Instructions
     local instructions = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    instructions:SetPoint("TOPLEFT", 25, -135)
-    instructions:SetWidth(650)
+    instructions:SetPoint("TOPLEFT", 25, -180)
+    instructions:SetWidth(370)
     instructions:SetJustifyH("LEFT")
-    instructions:SetText("Set priority values for each specialization (0-100). Higher values = higher priority for Power Infusion. Specs with priority 0 will never be targeted.")
+    instructions:SetText("Use the arrows to reorder specs. Higher in the list = higher priority for Power Infusion.")
 
     -- Scroll frame for spec list
     local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 20, -160)
+    scrollFrame:SetPoint("TOPLEFT", 20, -205)
     scrollFrame:SetPoint("BOTTOMRIGHT", -35, 50)
 
     local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetSize(640, 1)  -- Height will be set dynamically
+    scrollChild:SetSize(360, 1)  -- Height will be set dynamically
     scrollFrame:SetScrollChild(scrollChild)
-
-    -- Create spec priority controls
-    local yOffset = 0
-    local columnWidth = 310
-    local rowHeight = 28
-
-    for classIndex, class in ipairs(addon.ClassOrder) do
-        local classColor = addon.ClassColors[class]
-        local className = addon.ClassNames[class]
-        local specs = addon:GetSpecsByClass()[class]
-
-        if specs and #specs > 0 then
-            -- Class header
-            local classHeader = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-            classHeader:SetPoint("TOPLEFT", 5, -yOffset)
-            classHeader:SetTextColor(classColor.r, classColor.g, classColor.b)
-            classHeader:SetText(className)
-
-            yOffset = yOffset + 25
-
-            -- Spec sliders (2 columns)
-            for i, spec in ipairs(specs) do
-                local column = ((i - 1) % 2)
-                local xOffset = column * columnWidth
-
-                if column == 0 and i > 1 then
-                    yOffset = yOffset + rowHeight
-                end
-
-                -- Spec label
-                local label = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                label:SetPoint("TOPLEFT", xOffset + 10, -yOffset)
-                label:SetWidth(80)
-                label:SetJustifyH("LEFT")
-                label:SetText(spec.name)
-
-                -- Role indicator
-                local roleIcon = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                roleIcon:SetPoint("LEFT", label, "RIGHT", 2, 0)
-                if spec.role == "TANK" then
-                    roleIcon:SetText("|cFF0000FF[T]|r")
-                elseif spec.role == "HEALER" then
-                    roleIcon:SetText("|cFF00FF00[H]|r")
-                else
-                    roleIcon:SetText("|cFFFF0000[D]|r")
-                end
-
-                -- Slider
-                local slider = CreateFrame("Slider", "LazyPISlider" .. spec.specID, scrollChild, "OptionsSliderTemplate")
-                slider:SetPoint("LEFT", label, "RIGHT", 35, 0)
-                slider:SetWidth(120)
-                slider:SetMinMaxValues(0, 100)
-                slider:SetValueStep(5)
-                slider:SetObeyStepOnDrag(true)
-                slider.specID = spec.specID
-
-                -- Remove default text
-                _G[slider:GetName() .. "Low"]:SetText("0")
-                _G[slider:GetName() .. "High"]:SetText("100")
-                _G[slider:GetName() .. "Text"]:SetText("")
-
-                -- Value display
-                local valueText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                valueText:SetPoint("LEFT", slider, "RIGHT", 10, 0)
-                valueText:SetWidth(30)
-                slider.valueText = valueText
-
-                slider:SetScript("OnValueChanged", function(self, value)
-                    value = math.floor(value)
-                    self.valueText:SetText(value)
-                    addon:SetSpecPriority(self.specID, value)
-                end)
-
-                slider:SetScript("OnShow", function(self)
-                    local priority = addon:GetSpecPriority(self.specID) or 0
-                    self:SetValue(priority)
-                    self.valueText:SetText(math.floor(priority))
-                end)
-
-                specSliders[spec.specID] = slider
-            end
-
-            -- Move to next row after last spec if odd number
-            if #specs % 2 == 1 then
-                yOffset = yOffset + rowHeight
-            else
-                yOffset = yOffset + rowHeight
-            end
-
-            yOffset = yOffset + 10  -- Spacing between classes
-        end
-    end
-
-    -- Set scroll child height
-    scrollChild:SetHeight(yOffset + 20)
+    frame.scrollChild = scrollChild
 
     -- Current target display at bottom
     local targetLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -229,32 +244,23 @@ local function CreateSettingsFrame()
     targetValue:SetPoint("LEFT", targetLabel, "RIGHT", 10, 0)
     frame.targetValue = targetValue
 
-    -- Update target display
-    frame:SetScript("OnShow", function(self)
-        self:UpdateTargetDisplay()
-    end)
-
+    -- Update target display function
     function frame:UpdateTargetDisplay()
         if addon.bestTarget then
             local specInfo = addon.SpecInfo[addon.bestTarget.specID]
             local specName = specInfo and specInfo.name or "Unknown"
             local classColor = specInfo and addon.ClassColors[specInfo.class] or { r = 1, g = 1, b = 1 }
             self.targetValue:SetTextColor(classColor.r, classColor.g, classColor.b)
-            self.targetValue:SetText(addon.bestTarget.name .. " (" .. specName .. ", Priority: " .. addon.bestTarget.priority .. ")")
+            self.targetValue:SetText(addon.bestTarget.name .. " (" .. specName .. ")")
         else
             self.targetValue:SetTextColor(0.5, 0.5, 0.5)
             self.targetValue:SetText("None")
         end
     end
 
-    -- Refresh sliders when shown
+    -- Refresh on show
     frame:SetScript("OnShow", function(self)
-        for specID, slider in pairs(specSliders) do
-            local priority = addon:GetSpecPriority(specID) or 0
-            slider:SetValue(priority)
-            slider.valueText:SetText(math.floor(priority))
-        end
-        self:UpdateTargetDisplay()
+        addon:RefreshSettingsUI()
     end)
 
     frame:Hide()
@@ -265,25 +271,18 @@ end
 
 -- Reset confirmation dialog
 StaticPopupDialogs["LAZYPI_RESET_CONFIRM"] = {
-    text = "Are you sure you want to reset all priorities to defaults?",
+    text = "Are you sure you want to reset priorities to defaults?",
     button1 = "Yes",
     button2 = "No",
     OnAccept = function()
-        for specID, info in pairs(addon.SpecInfo) do
-            LazyPIDB.specPriorities[specID] = info.defaultPriority
+        -- Copy default order
+        LazyPIDB.specPriorityOrder = {}
+        for i, specID in ipairs(addon.DefaultPriorityOrder) do
+            LazyPIDB.specPriorityOrder[i] = specID
         end
         addon:Print("Priorities reset to defaults!")
         addon:UpdateBestTarget()
-
-        -- Refresh sliders
-        if settingsFrame and settingsFrame:IsShown() then
-            for specID, slider in pairs(specSliders) do
-                local priority = addon:GetSpecPriority(specID) or 0
-                slider:SetValue(priority)
-                slider.valueText:SetText(math.floor(priority))
-            end
-            settingsFrame:UpdateTargetDisplay()
-        end
+        addon:RefreshSettingsUI()
     end,
     timeout = 0,
     whileDead = true,
@@ -308,9 +307,9 @@ local function RegisterSettings()
 end
 
 -- Try to register settings when addon loads
-local settingsFrame = CreateFrame("Frame")
-settingsFrame:RegisterEvent("PLAYER_LOGIN")
-settingsFrame:SetScript("OnEvent", function()
+local settingsLoader = CreateFrame("Frame")
+settingsLoader:RegisterEvent("PLAYER_LOGIN")
+settingsLoader:SetScript("OnEvent", function()
     -- Delayed registration to ensure all systems are ready
     C_Timer.After(1, function()
         if Settings and Settings.RegisterCanvasLayoutCategory then

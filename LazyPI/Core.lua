@@ -14,7 +14,7 @@ addon.bestTarget = nil
 
 -- Default saved variables
 local defaults = {
-    specPriorities = {},  -- Will be populated from SpecInfo defaults
+    specPriorityOrder = {},  -- Will be populated from DefaultPriorityOrder
     enabled = true,
     debugMode = false,
     autoUpdateMacro = true,
@@ -34,10 +34,11 @@ local function InitializeDB()
         end
     end
 
-    -- Initialize spec priorities from defaults if empty
-    if not next(LazyPIDB.specPriorities) then
-        for specID, info in pairs(addon.SpecInfo) do
-            LazyPIDB.specPriorities[specID] = info.defaultPriority
+    -- Initialize spec priority order from defaults if empty
+    if not LazyPIDB.specPriorityOrder or #LazyPIDB.specPriorityOrder == 0 then
+        LazyPIDB.specPriorityOrder = {}
+        for i, specID in ipairs(addon.DefaultPriorityOrder) do
+            LazyPIDB.specPriorityOrder[i] = specID
         end
     end
 end
@@ -54,17 +55,19 @@ function addon:Print(...)
     print("|cFF9966FF[LazyPI]|r", ...)
 end
 
--- Get the priority for a given spec ID
+-- Get the priority for a given spec ID (lower number = higher priority)
 function addon:GetSpecPriority(specID)
-    if not specID then return 0 end
-    return LazyPIDB.specPriorities[specID] or 0
-end
+    if not specID then return 999 end
 
--- Set the priority for a given spec ID
-function addon:SetSpecPriority(specID, priority)
-    if not specID then return end
-    LazyPIDB.specPriorities[specID] = priority
-    self:UpdateBestTarget()
+    -- Find position in the ordered list
+    for i, id in ipairs(LazyPIDB.specPriorityOrder) do
+        if id == specID then
+            return i
+        end
+    end
+
+    -- Not in list (tank/healer spec) - lowest priority
+    return 999
 end
 
 -- Get spec info for a unit
@@ -97,7 +100,7 @@ function addon:GetGroupMembers()
         -- Solo - only self if includeSelf is enabled
         if LazyPIDB.includeSelf then
             local specID = self:GetUnitSpecInfo("player")
-            if specID then
+            if specID and self.SpecInfo[specID] then
                 table.insert(members, {
                     unit = "player",
                     name = UnitName("player"),
@@ -117,14 +120,16 @@ function addon:GetGroupMembers()
         local unit = prefix .. i
         if UnitExists(unit) and UnitIsPlayer(unit) and not UnitIsDeadOrGhost(unit) then
             local specID = self:GetUnitSpecInfo(unit)
-            local priority = self:GetSpecPriority(specID)
-
-            table.insert(members, {
-                unit = unit,
-                name = UnitName(unit),
-                specID = specID,
-                priority = priority,
-            })
+            -- Only add DPS specs (those in SpecInfo)
+            if specID and self.SpecInfo[specID] then
+                local priority = self:GetSpecPriority(specID)
+                table.insert(members, {
+                    unit = unit,
+                    name = UnitName(unit),
+                    specID = specID,
+                    priority = priority,
+                })
+            end
         end
     end
 
@@ -133,16 +138,19 @@ function addon:GetGroupMembers()
         local playerUnit = inRaid and "player" or "player"
         if UnitExists(playerUnit) and not UnitIsDeadOrGhost(playerUnit) then
             local specID = self:GetUnitSpecInfo("player")
-            local priority = self:GetSpecPriority(specID)
+            -- Only add if DPS spec
+            if specID and self.SpecInfo[specID] then
+                local priority = self:GetSpecPriority(specID)
 
-            -- In party mode, always include self; in raid, only if includeSelf
-            if not inRaid or LazyPIDB.includeSelf then
-                table.insert(members, {
-                    unit = "player",
-                    name = UnitName("player"),
-                    specID = specID,
-                    priority = priority,
-                })
+                -- In party mode, always include self; in raid, only if includeSelf
+                if not inRaid or LazyPIDB.includeSelf then
+                    table.insert(members, {
+                        unit = "player",
+                        name = UnitName("player"),
+                        specID = specID,
+                        priority = priority,
+                    })
+                end
             end
         end
     end
@@ -159,20 +167,20 @@ function addon:FindBestTarget()
         return nil
     end
 
-    -- Sort by priority (highest first)
+    -- Sort by priority (lower number = higher priority)
     table.sort(members, function(a, b)
-        return (a.priority or 0) > (b.priority or 0)
+        return (a.priority or 999) < (b.priority or 999)
     end)
 
     local best = members[1]
 
-    -- Only return if priority is greater than 0
-    if best and best.priority and best.priority > 0 then
+    -- Only return if the spec is in our list (priority < 999)
+    if best and best.priority and best.priority < 999 then
         self:Debug("Best target:", best.name, "Priority:", best.priority)
         return best
     end
 
-    self:Debug("No target with priority > 0 found")
+    self:Debug("No valid DPS target found")
     return nil
 end
 
@@ -365,7 +373,7 @@ SlashCmdList["LAZYPI"] = function(msg)
         if addon.bestTarget then
             local specInfo = addon.SpecInfo[addon.bestTarget.specID]
             local specName = specInfo and specInfo.name or "Unknown"
-            addon:Print("  Best target: " .. addon.bestTarget.name .. " (" .. specName .. ", priority: " .. addon.bestTarget.priority .. ")")
+            addon:Print("  Best target: " .. addon.bestTarget.name .. " (" .. specName .. ", rank: " .. addon.bestTarget.priority .. ")")
         else
             addon:Print("  Best target: None")
         end
@@ -373,11 +381,11 @@ SlashCmdList["LAZYPI"] = function(msg)
     elseif cmd == "list" then
         addon:Print("Current group members and priorities:")
         local members = addon:GetGroupMembers()
-        table.sort(members, function(a, b) return (a.priority or 0) > (b.priority or 0) end)
+        table.sort(members, function(a, b) return (a.priority or 999) < (b.priority or 999) end)
         for _, member in ipairs(members) do
             local specInfo = addon.SpecInfo[member.specID]
             local specName = specInfo and specInfo.name or "Unknown"
-            addon:Print("  " .. member.name .. " - " .. specName .. " (Priority: " .. (member.priority or 0) .. ")")
+            addon:Print("  " .. member.name .. " - " .. specName .. " (Rank: " .. (member.priority or "N/A") .. ")")
         end
 
     elseif cmd == "config" or cmd == "options" or cmd == "" then
@@ -385,8 +393,9 @@ SlashCmdList["LAZYPI"] = function(msg)
 
     elseif cmd == "reset" then
         -- Reset priorities to defaults
-        for specID, info in pairs(addon.SpecInfo) do
-            LazyPIDB.specPriorities[specID] = info.defaultPriority
+        LazyPIDB.specPriorityOrder = {}
+        for i, specID in ipairs(addon.DefaultPriorityOrder) do
+            LazyPIDB.specPriorityOrder[i] = specID
         end
         addon:Print("Priorities reset to defaults!")
         addon:UpdateBestTarget()
