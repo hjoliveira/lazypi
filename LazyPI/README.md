@@ -85,7 +85,7 @@ All priorities can be customized to match your group's needs.
 
 ## Requirements
 
-- World of Warcraft (Interface 110100 / Patch 11.x)
+- World of Warcraft (Interface 120000 / Patch 12.x - Midnight)
 - Priest class with Power Infusion
 
 ## Feedback & Issues
