@@ -17,8 +17,6 @@ local defaults = {
     specPriorityOrder = {},  -- Will be populated from DefaultPriorityOrder
     enabled = true,
     debugMode = false,
-    autoUpdateMacro = true,
-    includeSelf = false,  -- Whether to include self as a potential target
 }
 
 -- Initialize saved variables
@@ -97,18 +95,6 @@ function addon:GetGroupMembers()
     local inGroup = IsInGroup()
 
     if not inRaid and not inGroup then
-        -- Solo - only self if includeSelf is enabled
-        if LazyPIDB.includeSelf then
-            local specID = self:GetUnitSpecInfo("player")
-            if specID and self.SpecInfo[specID] then
-                table.insert(members, {
-                    unit = "player",
-                    name = UnitName("player"),
-                    specID = specID,
-                    priority = self:GetSpecPriority(specID),
-                })
-            end
-        end
         return members
     end
 
@@ -133,24 +119,19 @@ function addon:GetGroupMembers()
         end
     end
 
-    -- Add self if in party (not included in party1-4) or if includeSelf is enabled for raids
-    if not inRaid or LazyPIDB.includeSelf then
-        local playerUnit = inRaid and "player" or "player"
-        if UnitExists(playerUnit) and not UnitIsDeadOrGhost(playerUnit) then
+    -- Add self if in party (not included in party1-4)
+    if not inRaid then
+        if UnitExists("player") and not UnitIsDeadOrGhost("player") then
             local specID = self:GetUnitSpecInfo("player")
             -- Only add if DPS spec
             if specID and self.SpecInfo[specID] then
                 local priority = self:GetSpecPriority(specID)
-
-                -- In party mode, always include self; in raid, only if includeSelf
-                if not inRaid or LazyPIDB.includeSelf then
-                    table.insert(members, {
-                        unit = "player",
-                        name = UnitName("player"),
-                        specID = specID,
-                        priority = priority,
-                    })
-                end
+                table.insert(members, {
+                    unit = "player",
+                    name = UnitName("player"),
+                    specID = specID,
+                    priority = priority,
+                })
             end
         end
     end
@@ -197,9 +178,7 @@ function addon:UpdateBestTarget()
             self.bestTarget = newBest
             self:Debug("New best target:", newBest.name)
 
-            if LazyPIDB.autoUpdateMacro then
-                self:UpdateMacro()
-            end
+            self:UpdateMacro()
         end
     else
         self.bestTarget = nil
@@ -369,7 +348,6 @@ SlashCmdList["LAZYPI"] = function(msg)
     elseif cmd == "status" then
         addon:Print("Status:")
         addon:Print("  Enabled: " .. tostring(LazyPIDB.enabled))
-        addon:Print("  Auto-update: " .. tostring(LazyPIDB.autoUpdateMacro))
         if addon.bestTarget then
             local specInfo = addon.SpecInfo[addon.bestTarget.specID]
             local specName = specInfo and specInfo.name or "Unknown"

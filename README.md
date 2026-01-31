@@ -52,8 +52,6 @@ Use `/lazypi` or `/lpi` followed by:
 Open the settings panel with `/lpi` to configure:
 
 - **Enable/Disable** - Toggle the addon on or off
-- **Auto-Update Macro** - Automatically update when group composition changes
-- **Include Self** - Include yourself as a potential target
 - **Priority List** - Use the up/down arrows to reorder specs
   - Specs at the top of the list have highest priority
   - Move specs up or down to customize targeting order

@@ -169,37 +169,10 @@ local function CreateSettingsFrame()
         self:SetChecked(LazyPIDB.enabled)
     end)
 
-    -- Auto-update checkbox
-    local autoUpdateCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-    autoUpdateCheck:SetPoint("TOPLEFT", enableCheck, "BOTTOMLEFT", 0, 0)
-    autoUpdateCheck.text = autoUpdateCheck:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    autoUpdateCheck.text:SetPoint("LEFT", autoUpdateCheck, "RIGHT", 5, 0)
-    autoUpdateCheck.text:SetText("Auto-update macro when group changes")
-    autoUpdateCheck:SetScript("OnClick", function(self)
-        LazyPIDB.autoUpdateMacro = self:GetChecked()
-    end)
-    autoUpdateCheck:SetScript("OnShow", function(self)
-        self:SetChecked(LazyPIDB.autoUpdateMacro)
-    end)
-
-    -- Include self checkbox
-    local includeSelfCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-    includeSelfCheck:SetPoint("TOPLEFT", autoUpdateCheck, "BOTTOMLEFT", 0, 0)
-    includeSelfCheck.text = includeSelfCheck:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    includeSelfCheck.text:SetPoint("LEFT", includeSelfCheck, "RIGHT", 5, 0)
-    includeSelfCheck.text:SetText("Include self as potential target")
-    includeSelfCheck:SetScript("OnClick", function(self)
-        LazyPIDB.includeSelf = self:GetChecked()
-        addon:UpdateBestTarget()
-    end)
-    includeSelfCheck:SetScript("OnShow", function(self)
-        self:SetChecked(LazyPIDB.includeSelf)
-    end)
-
     -- Update button
     local updateButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     updateButton:SetSize(120, 25)
-    updateButton:SetPoint("TOPLEFT", 25, -145)
+    updateButton:SetPoint("TOPLEFT", 25, -85)
     updateButton:SetText("Update Macro")
     updateButton:SetScript("OnClick", function()
         addon:RequestGroupInspect()
@@ -220,14 +193,14 @@ local function CreateSettingsFrame()
 
     -- Instructions
     local instructions = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    instructions:SetPoint("TOPLEFT", 25, -180)
+    instructions:SetPoint("TOPLEFT", 25, -120)
     instructions:SetWidth(370)
     instructions:SetJustifyH("LEFT")
     instructions:SetText("Use the arrows to reorder specs. Higher in the list = higher priority for Power Infusion.")
 
     -- Scroll frame for spec list
     local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 20, -205)
+    scrollFrame:SetPoint("TOPLEFT", 20, -145)
     scrollFrame:SetPoint("BOTTOMRIGHT", -35, 50)
 
     local scrollChild = CreateFrame("Frame", nil, scrollFrame)
