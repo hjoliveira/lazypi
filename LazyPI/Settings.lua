@@ -72,7 +72,7 @@ function addon:RefreshSettingsUI()
                 row.upBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
                 row.upBtn:SetSize(24, 20)
                 row.upBtn:SetPoint("LEFT", row.specName, "RIGHT", 10, 0)
-                row.upBtn:SetText("\226\150\178")  -- Unicode up triangle
+                row.upBtn:SetText("^")
                 row.upBtn.specID = specID
                 row.upBtn:SetScript("OnClick", function(self)
                     MoveSpec(self.specID, -1)
@@ -82,7 +82,7 @@ function addon:RefreshSettingsUI()
                 row.downBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
                 row.downBtn:SetSize(24, 20)
                 row.downBtn:SetPoint("LEFT", row.upBtn, "RIGHT", 5, 0)
-                row.downBtn:SetText("\226\150\188")  -- Unicode down triangle
+                row.downBtn:SetText("v")
                 row.downBtn.specID = specID
                 row.downBtn:SetScript("OnClick", function(self)
                     MoveSpec(self.specID, 1)
