@@ -15,7 +15,6 @@ addon.bestTarget = nil
 -- Default saved variables
 local defaults = {
     specPriorityOrder = {},  -- Will be populated from DefaultPriorityOrder
-    enabled = true,
     debugMode = false,
 }
 
@@ -167,10 +166,6 @@ end
 
 -- Update the best target and refresh macro
 function addon:UpdateBestTarget()
-    if not LazyPIDB.enabled then
-        return
-    end
-
     local newBest = self:FindBestTarget()
 
     if newBest then
@@ -327,14 +322,7 @@ SlashCmdList["LAZYPI"] = function(msg)
     local cmd, arg = msg:match("^(%S*)%s*(.-)$")
     cmd = cmd:lower()
 
-    if cmd == "toggle" then
-        LazyPIDB.enabled = not LazyPIDB.enabled
-        addon:Print("Addon " .. (LazyPIDB.enabled and "enabled" or "disabled"))
-        if LazyPIDB.enabled then
-            addon:UpdateBestTarget()
-        end
-
-    elseif cmd == "update" then
+    if cmd == "update" then
         addon:RequestGroupInspect()
         C_Timer.After(1, function()
             addon:UpdateBestTarget()
@@ -347,7 +335,6 @@ SlashCmdList["LAZYPI"] = function(msg)
 
     elseif cmd == "status" then
         addon:Print("Status:")
-        addon:Print("  Enabled: " .. tostring(LazyPIDB.enabled))
         if addon.bestTarget then
             local specInfo = addon.SpecInfo[addon.bestTarget.specID]
             local specName = specInfo and specInfo.name or "Unknown"
@@ -381,7 +368,6 @@ SlashCmdList["LAZYPI"] = function(msg)
     else
         addon:Print("Commands:")
         addon:Print("  /lpi - Open settings")
-        addon:Print("  /lpi toggle - Enable/disable addon")
         addon:Print("  /lpi update - Force macro update")
         addon:Print("  /lpi status - Show current status")
         addon:Print("  /lpi list - List group members and priorities")

@@ -32,7 +32,6 @@ Use `/lazypi` or `/lpi` followed by:
 |---------|-------------|
 | *(none)* | Open settings panel |
 | `config` | Open settings panel |
-| `toggle` | Enable/disable the addon |
 | `update` | Force macro update |
 | `status` | Show current status and best target |
 | `list` | List all group members with their priorities |
@@ -51,7 +50,6 @@ Use `/lazypi` or `/lpi` followed by:
 
 Open the settings panel with `/lpi` to configure:
 
-- **Enable/Disable** - Toggle the addon on or off
 - **Priority List** - Use the up/down arrows to reorder specs
   - Specs at the top of the list have highest priority
   - Move specs up or down to customize targeting order

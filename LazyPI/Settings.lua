@@ -122,57 +122,20 @@ local function CreateSettingsFrame()
         return settingsFrame
     end
 
-    -- Main frame
-    local frame = CreateFrame("Frame", "LazyPISettingsFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(420, 550)
+    -- Main frame (no backdrop/border)
+    local frame = CreateFrame("Frame", "LazyPISettingsFrame", UIParent)
+    frame:SetSize(400, 520)
     frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetFrameStrata("DIALOG")
-    frame:SetClampedToScreen(true)
-
-    -- Backdrop
-    frame:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true,
-        tileSize = 32,
-        edgeSize = 32,
-        insets = { left = 11, right = 12, top = 12, bottom = 11 }
-    })
 
     -- Title
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", 0, -20)
+    title:SetPoint("TOP", 0, -10)
     title:SetText("LazyPI - Priority List")
-
-    -- Close button
-    local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-    closeButton:SetPoint("TOPRIGHT", -5, -5)
-
-    -- Enable checkbox
-    local enableCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-    enableCheck:SetPoint("TOPLEFT", 25, -50)
-    enableCheck.text = enableCheck:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    enableCheck.text:SetPoint("LEFT", enableCheck, "RIGHT", 5, 0)
-    enableCheck.text:SetText("Enable LazyPI")
-    enableCheck:SetScript("OnClick", function(self)
-        LazyPIDB.enabled = self:GetChecked()
-        if LazyPIDB.enabled then
-            addon:UpdateBestTarget()
-        end
-    end)
-    enableCheck:SetScript("OnShow", function(self)
-        self:SetChecked(LazyPIDB.enabled)
-    end)
 
     -- Update button
     local updateButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     updateButton:SetSize(120, 25)
-    updateButton:SetPoint("TOPLEFT", 25, -85)
+    updateButton:SetPoint("TOPLEFT", 15, -40)
     updateButton:SetText("Update Macro")
     updateButton:SetScript("OnClick", function()
         addon:RequestGroupInspect()
@@ -193,15 +156,15 @@ local function CreateSettingsFrame()
 
     -- Instructions
     local instructions = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    instructions:SetPoint("TOPLEFT", 25, -120)
+    instructions:SetPoint("TOPLEFT", 15, -75)
     instructions:SetWidth(370)
     instructions:SetJustifyH("LEFT")
     instructions:SetText("Use the arrows to reorder specs. Higher in the list = higher priority for Power Infusion.")
 
     -- Scroll frame for spec list
     local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 20, -145)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -35, 50)
+    scrollFrame:SetPoint("TOPLEFT", 10, -100)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -30, 40)
 
     local scrollChild = CreateFrame("Frame", nil, scrollFrame)
     scrollChild:SetSize(360, 1)  -- Height will be set dynamically
@@ -210,7 +173,7 @@ local function CreateSettingsFrame()
 
     -- Current target display at bottom
     local targetLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    targetLabel:SetPoint("BOTTOMLEFT", 25, 20)
+    targetLabel:SetPoint("BOTTOMLEFT", 15, 15)
     targetLabel:SetText("Current Best Target:")
 
     local targetValue = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
