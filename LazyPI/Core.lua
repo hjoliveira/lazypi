@@ -286,29 +286,6 @@ function LazyPI:OnEvent(event, ...)
         C_Timer.After(0.5, function()
             addon:UpdateBestTarget()
         end)
-
-    elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
-        local unit = ...
-        addon:Debug("Spec changed for:", unit or "unknown")
-        C_Timer.After(0.5, function()
-            addon:UpdateBestTarget()
-        end)
-
-    elseif event == "PLAYER_ENTERING_WORLD" then
-        if addon.initialized then
-            C_Timer.After(3, function()
-                addon:RequestGroupInspect()
-                addon:UpdateBestTarget()
-            end)
-        end
-
-    elseif event == "ZONE_CHANGED_NEW_AREA" then
-        if addon.initialized then
-            C_Timer.After(2, function()
-                addon:RequestGroupInspect()
-                addon:UpdateBestTarget()
-            end)
-        end
     end
 end
 
@@ -316,9 +293,6 @@ end
 LazyPI:RegisterEvent("ADDON_LOADED")
 LazyPI:RegisterEvent("GROUP_ROSTER_UPDATE")
 LazyPI:RegisterEvent("INSPECT_READY")
-LazyPI:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-LazyPI:RegisterEvent("PLAYER_ENTERING_WORLD")
-LazyPI:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 LazyPI:SetScript("OnEvent", LazyPI.OnEvent)
 
 -- Slash commands
