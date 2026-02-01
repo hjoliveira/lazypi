@@ -272,12 +272,20 @@ function LazyPI:OnEvent(event, ...)
     elseif event == "GROUP_ROSTER_UPDATE" then
         if addon.initialized then
             addon:Debug("Group roster changed")
+            -- Request inspects for any new members
             C_Timer.After(1, function()
                 addon:RequestGroupInspect()
             end)
-            C_Timer.After(2, function()
-                addon:UpdateBestTarget()
-            end)
+            -- Only update macro if current target left the group
+            if addon.bestTarget and addon.bestTarget.name then
+                local targetStillInGroup = UnitInParty(addon.bestTarget.name) or UnitInRaid(addon.bestTarget.name)
+                if not targetStillInGroup then
+                    addon:Debug("Current target left, updating macro")
+                    C_Timer.After(0.5, function()
+                        addon:UpdateBestTarget()
+                    end)
+                end
+            end
         end
 
     elseif event == "INSPECT_READY" then
