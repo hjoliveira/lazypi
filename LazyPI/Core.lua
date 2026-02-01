@@ -322,7 +322,7 @@ SlashCmdList["LAZYPI"] = function(msg)
     local cmd, arg = msg:match("^(%S*)%s*(.-)$")
     cmd = cmd:lower()
 
-    if cmd == "options" or cmd == "config" or cmd == "" then
+    if cmd == "options" or cmd == "" then
         if addon.settingsCategory then
             Settings.OpenToCategory(addon.settingsCategory:GetID())
         else
