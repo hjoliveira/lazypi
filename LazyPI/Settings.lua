@@ -221,6 +221,8 @@ local function CreateSettingsFrame()
     function frame:SetStandaloneMode(standalone)
         if standalone then
             self:SetBackdrop(self.backdropInfo)
+            self:SetBackdropColor(0, 0, 0, 0.9)
+            self:SetBackdropBorderColor(1, 1, 1, 1)
             self:SetMovable(true)
             self:EnableMouse(true)
             self.title:SetPoint("TOP", 0, -20)
