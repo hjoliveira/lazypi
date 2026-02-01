@@ -187,11 +187,13 @@ end
 function addon:UpdateMacro()
     local macroIndex = GetMacroIndexByName(self.macroName)
     local macroBody
+    local targetName = nil
+    local specName = nil
 
     if self.bestTarget and self.bestTarget.name then
-        local targetName = self.bestTarget.name
+        targetName = self.bestTarget.name
         local specInfo = self.SpecInfo[self.bestTarget.specID]
-        local specName = specInfo and specInfo.name or "Unknown"
+        specName = specInfo and specInfo.name or "Unknown"
 
         -- Create macro that targets the best player and casts PI
         macroBody = string.format(
@@ -209,6 +211,11 @@ function addon:UpdateMacro()
     if macroIndex > 0 then
         -- Update existing macro
         EditMacro(macroIndex, self.macroName, nil, macroBody)
+        if targetName then
+            self:Print("Macro updated: " .. targetName .. " (" .. specName .. ")")
+        else
+            self:Print("Macro updated: No target (using fallback)")
+        end
     else
         -- Create new macro
         local numGlobal, numPerChar = GetNumMacros()
