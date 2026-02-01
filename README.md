@@ -30,6 +30,7 @@ Use `/lazypi` or `/lpi` followed by:
 
 | Command | Description |
 |---------|-------------|
+| *(none)* | Open settings |
 | `update` | Force macro update |
 | `status` | Show current status and best target |
 | `list` | List all group members with their priorities |
