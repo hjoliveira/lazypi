@@ -322,7 +322,10 @@ SlashCmdList["LAZYPI"] = function(msg)
     local cmd, arg = msg:match("^(%S*)%s*(.-)$")
     cmd = cmd:lower()
 
-    if cmd == "update" then
+    if cmd == "config" or cmd == "options" or cmd == "" then
+        addon:OpenSettings()
+
+    elseif cmd == "update" then
         addon:RequestGroupInspect()
         C_Timer.After(1, function()
             addon:UpdateBestTarget()
