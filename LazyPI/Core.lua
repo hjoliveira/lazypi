@@ -322,10 +322,7 @@ SlashCmdList["LAZYPI"] = function(msg)
     local cmd, arg = msg:match("^(%S*)%s*(.-)$")
     cmd = cmd:lower()
 
-    if cmd == "config" or cmd == "options" or cmd == "" then
-        addon:OpenSettings()
-
-    elseif cmd == "update" then
+    if cmd == "update" then
         addon:RequestGroupInspect()
         C_Timer.After(1, function()
             addon:UpdateBestTarget()
@@ -370,12 +367,12 @@ SlashCmdList["LAZYPI"] = function(msg)
 
     else
         addon:Print("Commands:")
-        addon:Print("  /lpi - Open settings")
         addon:Print("  /lpi update - Force macro update")
         addon:Print("  /lpi status - Show current status")
         addon:Print("  /lpi list - List group members and priorities")
         addon:Print("  /lpi reset - Reset priorities to defaults")
         addon:Print("  /lpi debug - Toggle debug mode")
+        addon:Print("Settings available in Interface Options > AddOns > LazyPI")
     end
 end
 

@@ -30,14 +30,11 @@ Use `/lazypi` or `/lpi` followed by:
 
 | Command | Description |
 |---------|-------------|
-| *(none)* | Open settings panel |
-| `config` | Open settings panel |
 | `update` | Force macro update |
 | `status` | Show current status and best target |
 | `list` | List all group members with their priorities |
 | `reset` | Reset all priorities to defaults |
 | `debug` | Toggle debug mode |
-| `?` | Show help |
 
 ### Quick Start
 
@@ -48,13 +45,11 @@ Use `/lazypi` or `/lpi` followed by:
 
 ## Configuration
 
-Open the settings panel with `/lpi` to configure:
+Open the settings panel via **Interface Options > AddOns > LazyPI** to configure:
 
 - **Priority List** - Use the up/down arrows to reorder specs
   - Specs at the top of the list have highest priority
   - Move specs up or down to customize targeting order
-
-The settings panel can also be accessed via WoW's Interface Options menu.
 
 ## Default Priority Order
 
