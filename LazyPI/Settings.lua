@@ -6,6 +6,7 @@ local addonName, addon = ...
 -- Settings frame reference
 local settingsFrame = nil
 local specRows = {}
+local isStandalone = false
 
 -- Move a spec up or down in the priority list
 local function MoveSpec(specID, direction)
@@ -122,20 +123,38 @@ local function CreateSettingsFrame()
         return settingsFrame
     end
 
-    -- Main frame (no backdrop/border)
-    local frame = CreateFrame("Frame", "LazyPISettingsFrame", UIParent)
+    -- Main frame
+    local frame = CreateFrame("Frame", "LazyPISettingsFrame", UIParent, "BackdropTemplate")
     frame:SetSize(400, 520)
     frame:SetPoint("CENTER")
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", frame.StartMoving)
+    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+    frame:SetFrameStrata("DIALOG")
+    frame:SetClampedToScreen(true)
+
+    -- Backdrop (only shown when standalone)
+    frame.backdropInfo = {
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true,
+        tileSize = 32,
+        edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 }
+    }
 
     -- Title
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", 0, -10)
+    title:SetPoint("TOP", 0, -20)
     title:SetText("LazyPI - Priority List")
+    frame.title = title
 
     -- Update button
     local updateButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     updateButton:SetSize(120, 25)
-    updateButton:SetPoint("TOPLEFT", 15, -40)
+    updateButton:SetPoint("TOPLEFT", 25, -50)
     updateButton:SetText("Update Macro")
     updateButton:SetScript("OnClick", function()
         addon:RequestGroupInspect()
@@ -144,6 +163,7 @@ local function CreateSettingsFrame()
             addon:Print("Macro updated!")
         end)
     end)
+    frame.updateButton = updateButton
 
     -- Reset button
     local resetButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
@@ -156,15 +176,17 @@ local function CreateSettingsFrame()
 
     -- Instructions
     local instructions = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    instructions:SetPoint("TOPLEFT", 15, -75)
+    instructions:SetPoint("TOPLEFT", 25, -85)
     instructions:SetWidth(370)
     instructions:SetJustifyH("LEFT")
     instructions:SetText("Use the arrows to reorder specs. Higher in the list = higher priority for Power Infusion.")
+    frame.instructions = instructions
 
     -- Scroll frame for spec list
     local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 10, -100)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -30, 40)
+    scrollFrame:SetPoint("TOPLEFT", 20, -110)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -30, 50)
+    frame.scrollFrame = scrollFrame
 
     local scrollChild = CreateFrame("Frame", nil, scrollFrame)
     scrollChild:SetSize(360, 1)  -- Height will be set dynamically
@@ -173,8 +195,9 @@ local function CreateSettingsFrame()
 
     -- Current target display at bottom
     local targetLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    targetLabel:SetPoint("BOTTOMLEFT", 15, 15)
+    targetLabel:SetPoint("BOTTOMLEFT", 25, 20)
     targetLabel:SetText("Current Best Target:")
+    frame.targetLabel = targetLabel
 
     local targetValue = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     targetValue:SetPoint("LEFT", targetLabel, "RIGHT", 10, 0)
@@ -194,8 +217,31 @@ local function CreateSettingsFrame()
         end
     end
 
+    -- Configure for standalone or embedded mode
+    function frame:SetStandaloneMode(standalone)
+        if standalone then
+            self:SetBackdrop(self.backdropInfo)
+            self:SetMovable(true)
+            self:EnableMouse(true)
+            self.title:SetPoint("TOP", 0, -20)
+            self.updateButton:SetPoint("TOPLEFT", 25, -50)
+            self.instructions:SetPoint("TOPLEFT", 25, -85)
+            self.scrollFrame:SetPoint("TOPLEFT", 20, -110)
+            self.targetLabel:SetPoint("BOTTOMLEFT", 25, 20)
+        else
+            self:SetBackdrop(nil)
+            self:SetMovable(false)
+            self.title:SetPoint("TOP", 0, -10)
+            self.updateButton:SetPoint("TOPLEFT", 15, -40)
+            self.instructions:SetPoint("TOPLEFT", 15, -75)
+            self.scrollFrame:SetPoint("TOPLEFT", 10, -100)
+            self.targetLabel:SetPoint("BOTTOMLEFT", 15, 15)
+        end
+    end
+
     -- Refresh on show
     frame:SetScript("OnShow", function(self)
+        self:SetStandaloneMode(isStandalone)
         addon:RefreshSettingsUI()
     end)
 
@@ -225,19 +271,33 @@ StaticPopupDialogs["LAZYPI_RESET_CONFIRM"] = {
     hideOnEscape = true,
 }
 
--- Open settings panel
+-- Open settings panel (standalone mode)
 function addon:OpenSettings()
     local frame = CreateSettingsFrame()
-    if frame:IsShown() then
+    if frame:IsShown() and isStandalone then
         frame:Hide()
     else
+        isStandalone = true
+        frame:SetStandaloneMode(true)
         frame:Show()
     end
 end
 
 -- Register with Interface Options (modern API)
 local function RegisterSettings()
-    local category = Settings.RegisterCanvasLayoutCategory(CreateSettingsFrame(), "LazyPI")
+    local frame = CreateSettingsFrame()
+
+    -- When opened via Blizzard settings, use embedded mode
+    local category = Settings.RegisterCanvasLayoutCategory(frame, "LazyPI")
+    category:SetCategoryTutorialInfo(_G["GETTING_STARTED_LABEL"], nil)
+
+    -- Hook to detect when opened via Blizzard UI
+    hooksecurefunc(Settings, "OpenToCategory", function(categoryID)
+        if categoryID == category:GetID() or categoryID == "LazyPI" then
+            isStandalone = false
+        end
+    end)
+
     Settings.RegisterAddOnCategory(category)
     addon.settingsCategory = category
 end
