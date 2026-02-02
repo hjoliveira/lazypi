@@ -1,11 +1,8 @@
-## Interface: 110100
+## Interface: 120000
 ## Title: LazyPI
-## Notes: Automatically creates a macro to cast Power Infusion on the most valuable target based on specialization priority
-## Author: LazyPI Contributors
+## Notes: Simple Power Infusion macro - mouseover a player and update to set them as target
+## Author: hjoliveira
 ## Version: 1.0.0
-## SavedVariables: LazyPIDB
 ## IconTexture: Interface\Icons\spell_holy_powerinfusion
 
-SpecData.lua
 Core.lua
-Settings.lua
