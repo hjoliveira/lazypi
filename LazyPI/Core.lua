@@ -172,20 +172,8 @@ end
 -- Update the best target and refresh macro
 function addon:UpdateBestTarget()
     local newBest = self:FindBestTarget()
-
-    if newBest then
-        if not self.bestTarget or self.bestTarget.name ~= newBest.name then
-            self.bestTarget = newBest
-            self:Debug("New best target:", newBest.name)
-
-            self:UpdateMacro()
-        end
-    else
-        self.bestTarget = nil
-        if LazyPIDB.autoUpdateMacro then
-            self:UpdateMacro()
-        end
-    end
+    self.bestTarget = newBest
+    self:UpdateMacro()
 end
 
 -- Create or update the Power Infusion macro
@@ -308,11 +296,7 @@ SlashCmdList["LAZYPI"] = function(msg)
         end
 
     elseif cmd == "update" then
-        addon:RequestGroupInspect()
-        C_Timer.After(1, function()
-            addon:UpdateBestTarget()
-            addon:Print("Macro updated!")
-        end)
+        addon:UpdateBestTarget()
 
     elseif cmd == "debug" then
         LazyPIDB.debugMode = not LazyPIDB.debugMode
