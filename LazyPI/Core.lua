@@ -260,47 +260,13 @@ function LazyPI:OnEvent(event, ...)
         if loadedAddon == addonName then
             InitializeDB()
             addon.initialized = true
-            addon:Print("Loaded. Type /lazypi or /lpi for options.")
-
-            -- Initial update after a short delay
-            C_Timer.After(2, function()
-                addon:RequestGroupInspect()
-                addon:UpdateBestTarget()
-            end)
+            addon:Print("Loaded. Type /lpi update to set target.")
         end
-
-    elseif event == "GROUP_ROSTER_UPDATE" then
-        if addon.initialized then
-            addon:Debug("Group roster changed")
-            -- Request inspects for any new members
-            C_Timer.After(1, function()
-                addon:RequestGroupInspect()
-            end)
-            -- Only update macro if current target left the group
-            if addon.bestTarget and addon.bestTarget.name then
-                local targetStillInGroup = UnitInParty(addon.bestTarget.name) or UnitInRaid(addon.bestTarget.name)
-                if not targetStillInGroup then
-                    addon:Debug("Current target left, updating macro")
-                    C_Timer.After(0.5, function()
-                        addon:UpdateBestTarget()
-                    end)
-                end
-            end
-        end
-
-    elseif event == "INSPECT_READY" then
-        local guid = ...
-        addon:Debug("Inspect ready for:", guid)
-        C_Timer.After(0.5, function()
-            addon:UpdateBestTarget()
-        end)
     end
 end
 
 -- Register events
 LazyPI:RegisterEvent("ADDON_LOADED")
-LazyPI:RegisterEvent("GROUP_ROSTER_UPDATE")
-LazyPI:RegisterEvent("INSPECT_READY")
 LazyPI:SetScript("OnEvent", LazyPI.OnEvent)
 
 -- Slash commands
