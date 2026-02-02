@@ -253,6 +253,20 @@ function addon:RequestGroupInspect()
     end
 end
 
+-- Create the update macro if it doesn't exist
+local function CreateUpdateMacro()
+    local updateMacroName = "LazyPI Update"
+    local macroIndex = GetMacroIndexByName(updateMacroName)
+
+    if macroIndex == 0 then
+        local numGlobal, numPerChar = GetNumMacros()
+        if numGlobal < MAX_ACCOUNT_MACROS then
+            CreateMacro(updateMacroName, "INV_MISC_QUESTIONMARK", "/lpi update", false)
+            addon:Print("Created '" .. updateMacroName .. "' macro.")
+        end
+    end
+end
+
 -- Event handler
 function LazyPI:OnEvent(event, ...)
     if event == "ADDON_LOADED" then
@@ -262,11 +276,15 @@ function LazyPI:OnEvent(event, ...)
             addon.initialized = true
             addon:Print("Loaded. Type /lpi update to set target.")
         end
+    elseif event == "PLAYER_LOGIN" then
+        -- Create update macro after login (macros not available during ADDON_LOADED)
+        CreateUpdateMacro()
     end
 end
 
 -- Register events
 LazyPI:RegisterEvent("ADDON_LOADED")
+LazyPI:RegisterEvent("PLAYER_LOGIN")
 LazyPI:SetScript("OnEvent", LazyPI.OnEvent)
 
 -- Slash commands
