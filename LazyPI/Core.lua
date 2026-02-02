@@ -147,6 +147,13 @@ function addon:FindBestTarget()
         return nil
     end
 
+    -- Debug: show all members found
+    for _, m in ipairs(members) do
+        local specInfo = self.SpecInfo[m.specID]
+        local specName = specInfo and specInfo.name or "Unknown"
+        self:Debug("Found:", m.name, "-", specName, "(priority:", m.priority, ")")
+    end
+
     -- Sort by priority (lower number = higher priority), then by name for consistency
     table.sort(members, function(a, b)
         local prioA = a.priority or 999
@@ -311,8 +318,9 @@ SlashCmdList["LAZYPI"] = function(msg)
         end
 
     elseif cmd == "update" then
+        addon:Print("Scanning group...")
         addon:RequestGroupInspect()
-        C_Timer.After(0.5, function()
+        C_Timer.After(1.5, function()
             addon:UpdateBestTarget()
         end)
 
