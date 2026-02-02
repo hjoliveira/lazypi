@@ -172,8 +172,23 @@ end
 -- Update the best target and refresh macro
 function addon:UpdateBestTarget()
     local newBest = self:FindBestTarget()
-    self.bestTarget = newBest
-    self:UpdateMacro()
+    local oldName = self.bestTarget and self.bestTarget.name
+    local newName = newBest and newBest.name
+
+    -- Only update if target changed
+    if oldName ~= newName then
+        self.bestTarget = newBest
+        self:UpdateMacro()
+    else
+        -- Still show status even if no change
+        if newName then
+            local specInfo = self.SpecInfo[newBest.specID]
+            local specName = specInfo and specInfo.name or "Unknown"
+            self:Print("Target unchanged: " .. newName .. " (" .. specName .. ")")
+        else
+            self:Print("No valid target found")
+        end
+    end
 end
 
 -- Create or update the Power Infusion macro
@@ -296,7 +311,10 @@ SlashCmdList["LAZYPI"] = function(msg)
         end
 
     elseif cmd == "update" then
-        addon:UpdateBestTarget()
+        addon:RequestGroupInspect()
+        C_Timer.After(0.5, function()
+            addon:UpdateBestTarget()
+        end)
 
     elseif cmd == "debug" then
         LazyPIDB.debugMode = not LazyPIDB.debugMode
