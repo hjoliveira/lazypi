@@ -261,7 +261,7 @@ local function CreateUpdateMacro()
     if macroIndex == 0 then
         local numGlobal, numPerChar = GetNumMacros()
         if numGlobal < MAX_ACCOUNT_MACROS then
-            CreateMacro(updateMacroName, "spell_holy_powerinfusion", "/lpi update", false)
+            CreateMacro(updateMacroName, "INV_Misc_Gear_01", "/lpi update", false)
             addon:Print("Created '" .. updateMacroName .. "' macro.")
         end
     end
