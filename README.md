@@ -1,16 +1,12 @@
 # LazyPI
 
-A World of Warcraft addon that automatically manages a Power Infusion macro, targeting the most valuable DPS player in your group based on a customizable priority list.
+A World of Warcraft addon that creates a Power Infusion macro targeting the highest-priority DPS player in your group based on a customizable priority list.
 
 ## Features
 
-- **Automatic Target Selection** - Analyzes group/raid members and identifies the highest-priority DPS target
-- **Dynamic Macro Management** - Creates and updates a "LazyPI" macro that targets the optimal player
-- **Drag-and-Drop Priority List** - Reorder DPS specs using up/down arrows to set your preferred priority
-- **Live Updates** - Automatically re-evaluates targets when:
-  - Group roster changes
-  - Player specializations change
-  - Entering new zones
+- **Smart Target Selection** - Analyzes group/raid members and identifies the highest-priority DPS target
+- **Macro Management** - Creates and updates a "LazyPI" macro that targets the optimal player
+- **Customizable Priority List** - Reorder DPS specs using up/down arrows to set your preferred priority
 - **Smart Fallback** - When no priority target exists, defaults to mouseover → target → self
 - **DPS Only** - Only considers DPS specializations (tanks and healers are excluded)
 
@@ -20,7 +16,6 @@ A World of Warcraft addon that automatically manages a Power Infusion macro, tar
 2. Place it in your WoW addons directory:
    - **Retail**: `World of Warcraft/_retail_/Interface/AddOns/`
 3. Restart WoW or reload your UI (`/reload`)
-4. The addon will automatically create a "LazyPI" macro
 
 ## Usage
 
@@ -31,7 +26,7 @@ Use `/lazypi` or `/lpi` followed by:
 | Command | Description |
 |---------|-------------|
 | *(none)* | Open settings |
-| `update` | Force macro update |
+| `update` | Update macro with best target |
 | `status` | Show current status and best target |
 | `list` | List all group members with their priorities |
 | `reset` | Reset all priorities to defaults |
@@ -41,7 +36,7 @@ Use `/lazypi` or `/lpi` followed by:
 
 1. After installation, drag the "LazyPI" macro from your macro window to your action bar
 2. Join a group or raid
-3. The macro will automatically update to target the best Power Infusion candidate
+3. Run `/lpi update` to set the macro target
 4. Use `/lpi status` to see who is currently being targeted
 
 ## Configuration
@@ -72,12 +67,12 @@ All priorities can be customized by reordering the list in the settings panel.
 
 ## How It Works
 
-1. When you join a group, the addon inspects each member to determine their specialization
-2. Only DPS specs are considered (tanks and healers are ignored)
-3. Members are sorted by their spec's position in your priority list
-4. The highest-ranked living DPS player becomes the macro target
-5. The macro is updated with `/cast [@PlayerName] Power Infusion`
-6. When the target leaves or dies, the addon automatically selects the next best target
+1. Run `/lpi update` to scan your group
+2. The addon inspects each member to determine their specialization
+3. Only DPS specs are considered (tanks and healers are ignored)
+4. Members are sorted by their spec's position in your priority list
+5. The highest-ranked living DPS player becomes the macro target
+6. The macro is updated with `/cast [@PlayerName] Power Infusion`
 
 ## Requirements
 
