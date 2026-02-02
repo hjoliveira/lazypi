@@ -147,9 +147,14 @@ function addon:FindBestTarget()
         return nil
     end
 
-    -- Sort by priority (lower number = higher priority)
+    -- Sort by priority (lower number = higher priority), then by name for consistency
     table.sort(members, function(a, b)
-        return (a.priority or 999) < (b.priority or 999)
+        local prioA = a.priority or 999
+        local prioB = b.priority or 999
+        if prioA ~= prioB then
+            return prioA < prioB
+        end
+        return (a.name or "") < (b.name or "")
     end)
 
     local best = members[1]
