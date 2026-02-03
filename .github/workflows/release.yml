@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "LazyPI/LazyPI.toc"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read version from TOC
+        id: version
+        run: |
+          version=$(grep '^## Version:' LazyPI/LazyPI.toc | sed 's/## Version: *//')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Detected version: $version"
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create addon zip
+        if: steps.check_tag.outputs.exists == 'false'
+        run: zip -r LazyPI-${{ steps.version.outputs.version }}.zip LazyPI/
+
+      - name: Create tag and GitHub release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: LazyPI v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: LazyPI-${{ steps.version.outputs.version }}.zip
