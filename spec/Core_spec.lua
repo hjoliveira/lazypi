@@ -50,6 +50,31 @@ describe("LazyPI Addon", function()
     end)
 
     describe("UpdateMacroToMouseover", function()
+        describe("when in combat", function()
+            before_each(function()
+                _G.mockState.inCombat = true
+                _G.mockState.mouseoverUnit = "FriendlyPlayer"
+                _G.mockState.isMouseoverPlayer = true
+                _G.mockState.isMouseoverFriendly = true
+            end)
+
+            it("should print combat warning", function()
+                addon:UpdateMacroToMouseover()
+                assert.is_true(wasMessagePrinted("Cannot update macro during combat"))
+            end)
+
+            it("should not set currentTarget", function()
+                addon:UpdateMacroToMouseover()
+                assert.is_nil(addon.currentTarget)
+            end)
+
+            it("should not create or edit macros", function()
+                local initialCount = #_G.mockState.macros
+                addon:UpdateMacroToMouseover()
+                assert.equal(initialCount, #_G.mockState.macros)
+            end)
+        end)
+
         describe("when no mouseover target", function()
             it("should print 'No mouseover target'", function()
                 _G.mockState.mouseoverUnit = nil
@@ -198,6 +223,26 @@ describe("LazyPI Addon", function()
             before_each(function()
                 addon.currentTarget = "SomeTarget"
                 CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", false)
+            end)
+
+            describe("when in combat", function()
+                it("should print combat warning", function()
+                    _G.mockState.inCombat = true
+                    executeSlashCommand("clear")
+                    assert.is_true(wasMessagePrinted("Cannot update macro during combat"))
+                end)
+
+                it("should not clear currentTarget", function()
+                    _G.mockState.inCombat = true
+                    executeSlashCommand("clear")
+                    assert.equal("SomeTarget", addon.currentTarget)
+                end)
+
+                it("should not modify the macro", function()
+                    _G.mockState.inCombat = true
+                    executeSlashCommand("clear")
+                    assert.equal("old body", _G.mockState.macros[1].body)
+                end)
             end)
 
             it("should clear currentTarget", function()
