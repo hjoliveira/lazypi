@@ -43,7 +43,7 @@ function addon:UpdateMacroToMouseover()
     self.currentTarget = mouseoverName
 
     local macroBody = string.format(
-        "#showtooltip Power Infusion\n/cast [@%s,help,nodead] Power Infusion",
+        "#showtooltip Power Infusion\n/cast [@%s,help,nodead][@player] Power Infusion",
         mouseoverName
     )
 

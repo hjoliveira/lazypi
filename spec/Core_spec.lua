@@ -353,5 +353,13 @@ describe("LazyPI Addon", function()
             assert.is_truthy(_G.mockState.macros[1].body:match("help"))
             assert.is_truthy(_G.mockState.macros[1].body:match("nodead"))
         end)
+
+        it("should include @player fallback for when target is unavailable", function()
+            _G.mockState.mouseoverUnit = "TestPlayer"
+            _G.mockState.isMouseoverPlayer = true
+            _G.mockState.isMouseoverFriendly = true
+            addon:UpdateMacroToMouseover()
+            assert.is_truthy(_G.mockState.macros[1].body:match("@player"))
+        end)
     end)
 end)
