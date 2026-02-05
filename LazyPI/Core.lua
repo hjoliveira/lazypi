@@ -18,6 +18,11 @@ end
 
 -- Update the LazyPI macro to target current mouseover
 function addon:UpdateMacroToMouseover()
+    if InCombatLockdown() then
+        self:Print("Cannot update macro during combat")
+        return
+    end
+
     local mouseoverName = UnitName("mouseover")
 
     if not mouseoverName then
@@ -122,6 +127,10 @@ SlashCmdList["LAZYPI"] = function(msg)
         end
 
     elseif cmd == "clear" then
+        if InCombatLockdown() then
+            addon:Print("Cannot update macro during combat")
+            return
+        end
         addon.currentTarget = nil
         local macroIndex = GetMacroIndexByName(addon.macroName)
         if macroIndex > 0 then

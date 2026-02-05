@@ -11,6 +11,7 @@ _G.mockState = {
     isMouseoverPlayer = true,
     isMouseoverFriendly = true,
     numMacros = 0,
+    inCombat = false,
 }
 
 -- Reset all mock state
@@ -24,6 +25,7 @@ function _G.resetMockState()
         isMouseoverPlayer = true,
         isMouseoverFriendly = true,
         numMacros = 0,
+        inCombat = false,
     }
     -- Reset SlashCmdList
     _G.SlashCmdList = {}
@@ -43,6 +45,11 @@ end
 
 -- Mock MAX_ACCOUNT_MACROS constant
 _G.MAX_ACCOUNT_MACROS = 120
+
+-- Mock InCombatLockdown
+function _G.InCombatLockdown()
+    return _G.mockState.inCombat
+end
 
 -- Mock UnitName
 function _G.UnitName(unit)
