@@ -31,6 +31,46 @@ A simple World of Warcraft addon for managing a Power Infusion macro. Mouseover 
 - **LazyPI Update macro**: Sets your mouseover as the new target
 - If no target is set, falls back to mouseover → target → self
 
+## Development
+
+### Prerequisites
+
+- Lua 5.4
+- [LuaRocks](https://luarocks.org/) (Lua package manager)
+- [Busted](https://lunarmodules.github.io/busted/) (testing framework)
+
+### Installing Dependencies
+
+**Ubuntu/Debian:**
+
+```bash
+apt-get install -y lua5.4 liblua5.4-dev luarocks
+luarocks install busted
+```
+
+**macOS (Homebrew):**
+
+```bash
+brew install lua luarocks
+luarocks install busted
+```
+
+**Windows:**
+
+1. Download and install Lua from https://www.lua.org/download.html
+2. Install LuaRocks from https://luarocks.org/
+3. Run: `luarocks install busted`
+
+### Running Tests
+
+From the repository root:
+
+```bash
+busted
+```
+
+Tests are in the `spec/` directory. CI runs tests automatically on all pushes and pull requests via GitHub Actions.
+
 ## Requirements
 
 - World of Warcraft (Interface 120000 / Patch 12.x - Midnight)
