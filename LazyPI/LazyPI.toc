@@ -2,7 +2,7 @@
 ## Title: LazyPI
 ## Notes: Simple Power Infusion macro - mouseover a player and update to set them as target
 ## Author: hjoliveira
-## Version: 1.0.0
+## Version: 1.0.1
 ## IconTexture: Interface\Icons\spell_holy_powerinfusion
 
 Core.lua

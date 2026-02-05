@@ -6,26 +6,22 @@ This document provides instructions for AI agents working on this codebase.
 
 LazyPI is a World of Warcraft addon for Priests to simplify Power Infusion macro management. The main code is in `LazyPI/Core.lua`.
 
-## Installing Lua and Busted
+## Installing Dependencies
+
+Install Lua, LuaRocks, and the Busted testing framework before working on this project.
 
 ### On Ubuntu/Debian
 
 ```bash
-# Install Lua 5.4 and LuaRocks
-sudo apt-get update
-sudo apt-get install -y lua5.4 liblua5.4-dev luarocks
-
-# Install busted testing framework
-sudo luarocks install busted
+apt-get update
+apt-get install -y lua5.4 liblua5.4-dev luarocks
+luarocks install busted
 ```
 
 ### On macOS
 
 ```bash
-# Using Homebrew
 brew install lua luarocks
-
-# Install busted
 luarocks install busted
 ```
 
@@ -40,12 +36,6 @@ luarocks install busted
 From the repository root directory, run:
 
 ```bash
-busted --verbose
-```
-
-Or simply:
-
-```bash
 busted
 ```
 
@@ -53,13 +43,19 @@ The tests are located in the `spec/` directory and use the busted testing framew
 
 ## Test Requirements
 
-**Tests must be run after making any code change.**
+**Any code change requires corresponding tests and a passing test suite.**
 
-Before committing changes:
+When modifying code:
 
-1. Run `busted --verbose` to execute all tests
-2. Ensure all tests pass (exit code 0)
-3. If tests fail, fix the issues before committing
+1. **Add or update tests** for any new or changed behavior in `spec/Core_spec.lua`
+2. Run `busted` to execute all tests
+3. Ensure all tests pass (exit code 0)
+4. If tests fail, fix the issues before committing
+
+When adding a new feature or fixing a bug:
+
+- Write tests that cover the new behavior or reproduce the bug before fixing it
+- Verify the new tests fail without the code change and pass with it
 
 The GitHub Actions workflow will automatically run tests on all pushes and pull requests. PRs with failing tests should not be merged.
 
