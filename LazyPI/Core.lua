@@ -1,5 +1,6 @@
 -- LazyPI Core
--- Simple Power Infusion macro management - targets your mouseover
+-- Simple spell macro management - targets your mouseover
+-- Supports Power Infusion (Priest) and Misdirection (Hunter)
 
 local addonName, addon = ...
 
@@ -10,6 +11,29 @@ addon.frame = LazyPI
 -- Addon state
 addon.macroName = "LazyPI"
 addon.currentTarget = nil
+addon.spellName = nil
+addon.spellIcon = nil
+addon.fallbackCondition = nil
+addon.fallbackChain = nil
+
+-- Configure spell based on player class
+local function ConfigureForClass()
+    local _, playerClass = UnitClass("player")
+
+    if playerClass == "HUNTER" then
+        addon.spellName = "Misdirection"
+        addon.spellIcon = "ability_hunter_misdirection"
+        addon.fallbackCondition = "@pet,exists,nodead"
+        addon.fallbackChain = "[@mouseover,help,nodead][@target,help,nodead][@pet,exists,nodead][@focus,help,nodead]"
+    else
+        addon.spellName = "Power Infusion"
+        addon.spellIcon = "spell_holy_powerinfusion"
+        addon.fallbackCondition = "@player"
+        addon.fallbackChain = "[@mouseover,help,nodead][@target,help,nodead][@player]"
+    end
+end
+
+ConfigureForClass()
 
 -- Print function
 function addon:Print(...)
@@ -43,8 +67,8 @@ function addon:UpdateMacroToMouseover()
     self.currentTarget = mouseoverName
 
     local macroBody = string.format(
-        "#showtooltip Power Infusion\n/cast [@%s,help,nodead][@player] Power Infusion",
-        mouseoverName
+        "#showtooltip %s\n/cast [@%s,help,nodead][%s] %s",
+        self.spellName, mouseoverName, self.fallbackCondition, self.spellName
     )
 
     local macroIndex = GetMacroIndexByName(self.macroName)
@@ -55,7 +79,7 @@ function addon:UpdateMacroToMouseover()
     else
         local numGlobal = GetNumMacros()
         if numGlobal < MAX_ACCOUNT_MACROS then
-            CreateMacro(self.macroName, "spell_holy_powerinfusion", macroBody, false)
+            CreateMacro(self.macroName, self.spellIcon, macroBody, false)
             self:Print("Created macro for: " .. mouseoverName)
         else
             self:Print("Cannot create macro - maximum global macros reached!")
@@ -84,8 +108,11 @@ local function CreateMainMacro()
     if macroIndex == 0 then
         local numGlobal = GetNumMacros()
         if numGlobal < MAX_ACCOUNT_MACROS then
-            local macroBody = "#showtooltip Power Infusion\n/cast [@mouseover,help,nodead][@target,help,nodead][@player] Power Infusion"
-            CreateMacro(addon.macroName, "spell_holy_powerinfusion", macroBody, false)
+            local macroBody = string.format(
+                "#showtooltip %s\n/cast %s %s",
+                addon.spellName, addon.fallbackChain, addon.spellName
+            )
+            CreateMacro(addon.macroName, addon.spellIcon, macroBody, false)
         end
     end
 end
@@ -134,7 +161,10 @@ SlashCmdList["LAZYPI"] = function(msg)
         addon.currentTarget = nil
         local macroIndex = GetMacroIndexByName(addon.macroName)
         if macroIndex > 0 then
-            local macroBody = "#showtooltip Power Infusion\n/cast [@mouseover,help,nodead][@target,help,nodead][@player] Power Infusion"
+            local macroBody = string.format(
+                "#showtooltip %s\n/cast %s %s",
+                addon.spellName, addon.fallbackChain, addon.spellName
+            )
             EditMacro(macroIndex, addon.macroName, nil, macroBody)
             addon:Print("Target cleared (using fallback)")
         end
