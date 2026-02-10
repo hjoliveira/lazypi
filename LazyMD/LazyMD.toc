@@ -1,0 +1,8 @@
+## Interface: 120000
+## Title: LazyMD
+## Notes: Simple Misdirection macro - mouseover a player and update to set them as target
+## Author: hjoliveira
+## Version: 1.0.0
+## IconTexture: Interface\Icons\ability_hunter_misdirection
+
+Core.lua

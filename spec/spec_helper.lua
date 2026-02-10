@@ -31,9 +31,13 @@ function _G.resetMockState()
     _G.SlashCmdList = {}
     _G.SLASH_LAZYPI1 = nil
     _G.SLASH_LAZYPI2 = nil
+    _G.SLASH_LAZYMD1 = nil
+    _G.SLASH_LAZYMD2 = nil
     -- Reset frame globals
     _G.LazyPIFrame = nil
     _G.LazyPI = nil
+    _G.LazyMDFrame = nil
+    _G.LazyMD = nil
 end
 
 -- Mock print function
@@ -208,4 +212,42 @@ function _G.wasMessagePrinted(pattern)
         end
     end
     return false
+end
+
+-- Helper to load the LazyMD addon
+function _G.loadLazyMDAddon()
+    -- Reset state before loading
+    _G.resetMockState()
+
+    -- Simulate the addon loading environment
+    local addonName = "LazyMD"
+    local addon = {}
+
+    -- Load Core.lua with the addon environment
+    local chunk, err = loadfile("LazyMD/Core.lua")
+    if not chunk then
+        error("Failed to load LazyMD/Core.lua: " .. tostring(err))
+    end
+
+    -- Call with addon name and table as varargs
+    chunk(addonName, addon)
+
+    return addon
+end
+
+-- Helper to simulate an event for LazyMD
+function _G.simulateLazyMDEvent(event, ...)
+    local handler = _G.mockState.scripts["OnEvent"]
+    if handler then
+        local frame = _G.LazyMDFrame or {}
+        handler(frame, event, ...)
+    end
+end
+
+-- Helper to execute LazyMD slash command
+function _G.executeLazyMDSlashCommand(msg)
+    local handler = _G.SlashCmdList["LAZYMD"]
+    if handler then
+        handler(msg or "")
+    end
 end
