@@ -37,6 +37,32 @@ describe("LazyPI Addon", function()
         end)
     end)
 
+    describe("class detection", function()
+        it("should configure Power Infusion for Priest", function()
+            local priestAddon = loadAddon("PRIEST")
+            assert.is_true(priestAddon.supported)
+            assert.equal("Power Infusion", priestAddon.spellName)
+            assert.equal("spell_holy_powerinfusion", priestAddon.spellIcon)
+            assert.equal("@player", priestAddon.fallbackCondition)
+        end)
+
+        it("should configure Misdirection for Hunter", function()
+            local hunterAddon = loadAddon("HUNTER")
+            assert.is_true(hunterAddon.supported)
+            assert.equal("Misdirection", hunterAddon.spellName)
+            assert.equal("ability_hunter_misdirection", hunterAddon.spellIcon)
+            assert.equal("@pet,exists,nodead", hunterAddon.fallbackCondition)
+            assert.equal("LazyMD", hunterAddon.macroName)
+            assert.equal("LazyMD Update", hunterAddon.updateMacroName)
+        end)
+
+        it("should not support unknown classes", function()
+            local otherAddon = loadAddon("MAGE")
+            assert.is_false(otherAddon.supported)
+            assert.is_nil(otherAddon.spellName)
+        end)
+    end)
+
     describe("Print function", function()
         it("should prefix messages with [LazyPI]", function()
             addon:Print("Test message")
@@ -133,7 +159,7 @@ describe("LazyPI Addon", function()
             describe("and macro already exists", function()
                 before_each(function()
                     -- Create the LazyPI macro first
-                    CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", false)
+                    CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", true)
                 end)
 
                 it("should set currentTarget to the mouseover name", function()
@@ -160,6 +186,11 @@ describe("LazyPI Addon", function()
                         assert.equal("LazyPI", _G.mockState.macros[1].name)
                     end)
 
+                    it("should create macro as per-character", function()
+                        addon:UpdateMacroToMouseover()
+                        assert.is_true(_G.mockState.macros[1].perCharacter)
+                    end)
+
                     it("should set currentTarget", function()
                         addon:UpdateMacroToMouseover()
                         assert.equal("FriendlyPlayer", addon.currentTarget)
@@ -171,14 +202,14 @@ describe("LazyPI Addon", function()
                     end)
                 end)
 
-                describe("and max macros reached", function()
+                describe("and max character macros reached", function()
                     before_each(function()
-                        _G.mockState.numMacros = MAX_ACCOUNT_MACROS
+                        _G.mockState.numCharacterMacros = MAX_CHARACTER_MACROS
                     end)
 
                     it("should print error about max macros", function()
                         addon:UpdateMacroToMouseover()
-                        assert.is_true(wasMessagePrinted("maximum global macros reached"))
+                        assert.is_true(wasMessagePrinted("maximum character macros reached"))
                     end)
 
                     it("should not create a macro", function()
@@ -222,7 +253,7 @@ describe("LazyPI Addon", function()
         describe("clear command", function()
             before_each(function()
                 addon.currentTarget = "SomeTarget"
-                CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", false)
+                CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", true)
             end)
 
             describe("when in combat", function()
@@ -313,7 +344,7 @@ describe("LazyPI Addon", function()
 
         describe("PLAYER_LOGIN", function()
             it("should create macros when slots available", function()
-                _G.mockState.numMacros = 0
+                _G.mockState.numCharacterMacros = 0
                 simulateEvent("PLAYER_LOGIN")
                 -- Should have created both LazyPI and LazyPI Update macros
                 local foundLazyPI = false
@@ -325,10 +356,18 @@ describe("LazyPI Addon", function()
                 assert.is_true(foundLazyPI)
                 assert.is_true(foundLazyPIUpdate)
             end)
+
+            it("should create macros as per-character", function()
+                _G.mockState.numCharacterMacros = 0
+                simulateEvent("PLAYER_LOGIN")
+                for _, macro in ipairs(_G.mockState.macros) do
+                    assert.is_true(macro.perCharacter)
+                end
+            end)
         end)
     end)
 
-    describe("Macro body format", function()
+    describe("Macro body format (Priest)", function()
         it("should include #showtooltip Power Infusion", function()
             _G.mockState.mouseoverUnit = "TestPlayer"
             _G.mockState.isMouseoverPlayer = true
@@ -360,6 +399,208 @@ describe("LazyPI Addon", function()
             _G.mockState.isMouseoverFriendly = true
             addon:UpdateMacroToMouseover()
             assert.is_truthy(_G.mockState.macros[1].body:match("@player"))
+        end)
+    end)
+end)
+
+describe("LazyPI Addon (Hunter)", function()
+    local addon
+
+    before_each(function()
+        addon = loadAddon("HUNTER")
+    end)
+
+    describe("class configuration", function()
+        it("should set spellName to Misdirection", function()
+            assert.equal("Misdirection", addon.spellName)
+        end)
+
+        it("should set spellIcon to ability_hunter_misdirection", function()
+            assert.equal("ability_hunter_misdirection", addon.spellIcon)
+        end)
+
+        it("should set fallbackCondition to @pet,exists,nodead", function()
+            assert.equal("@pet,exists,nodead", addon.fallbackCondition)
+        end)
+
+        it("should include @focus in fallbackChain", function()
+            assert.is_truthy(addon.fallbackChain:match("@focus"))
+        end)
+    end)
+
+    describe("UpdateMacroToMouseover", function()
+        describe("when in combat", function()
+            it("should print combat warning", function()
+                _G.mockState.inCombat = true
+                _G.mockState.mouseoverUnit = "FriendlyPlayer"
+                _G.mockState.isMouseoverPlayer = true
+                _G.mockState.isMouseoverFriendly = true
+                addon:UpdateMacroToMouseover()
+                assert.is_true(wasMessagePrinted("Cannot update macro during combat"))
+            end)
+        end)
+
+        describe("when mouseover is a valid friendly player", function()
+            before_each(function()
+                _G.mockState.mouseoverUnit = "TankPlayer"
+                _G.mockState.isMouseoverPlayer = true
+                _G.mockState.isMouseoverFriendly = true
+            end)
+
+            describe("and macro already exists", function()
+                before_each(function()
+                    CreateMacro("LazyMD", "ability_hunter_misdirection", "old body", true)
+                end)
+
+                it("should set currentTarget to the mouseover name", function()
+                    addon:UpdateMacroToMouseover()
+                    assert.equal("TankPlayer", addon.currentTarget)
+                end)
+
+                it("should update the macro with Misdirection", function()
+                    addon:UpdateMacroToMouseover()
+                    assert.is_truthy(_G.mockState.macros[1].body:match("Misdirection"))
+                    assert.is_truthy(_G.mockState.macros[1].body:match("TankPlayer"))
+                end)
+            end)
+
+            describe("and macro does not exist", function()
+                it("should create a new macro named LazyMD with hunter icon", function()
+                    addon:UpdateMacroToMouseover()
+                    assert.equal(1, #_G.mockState.macros)
+                    assert.equal("LazyMD", _G.mockState.macros[1].name)
+                    assert.equal("ability_hunter_misdirection", _G.mockState.macros[1].icon)
+                end)
+
+                it("should create macro as per-character", function()
+                    addon:UpdateMacroToMouseover()
+                    assert.is_true(_G.mockState.macros[1].perCharacter)
+                end)
+            end)
+        end)
+    end)
+
+    describe("Macro body format (Hunter)", function()
+        before_each(function()
+            _G.mockState.mouseoverUnit = "TankPlayer"
+            _G.mockState.isMouseoverPlayer = true
+            _G.mockState.isMouseoverFriendly = true
+        end)
+
+        it("should include #showtooltip Misdirection", function()
+            addon:UpdateMacroToMouseover()
+            assert.is_truthy(_G.mockState.macros[1].body:match("#showtooltip Misdirection"))
+        end)
+
+        it("should include target name in @playername format", function()
+            addon:UpdateMacroToMouseover()
+            assert.is_truthy(_G.mockState.macros[1].body:match("@TankPlayer"))
+        end)
+
+        it("should include help and nodead conditions", function()
+            addon:UpdateMacroToMouseover()
+            assert.is_truthy(_G.mockState.macros[1].body:match("help"))
+            assert.is_truthy(_G.mockState.macros[1].body:match("nodead"))
+        end)
+
+        it("should include @pet fallback instead of @player", function()
+            addon:UpdateMacroToMouseover()
+            assert.is_truthy(_G.mockState.macros[1].body:match("@pet"))
+            assert.is_falsy(_G.mockState.macros[1].body:match("@player"))
+        end)
+
+        it("should cast Misdirection not Power Infusion", function()
+            addon:UpdateMacroToMouseover()
+            assert.is_truthy(_G.mockState.macros[1].body:match("Misdirection"))
+            assert.is_falsy(_G.mockState.macros[1].body:match("Power Infusion"))
+        end)
+    end)
+
+    describe("Fallback macro format (Hunter)", function()
+        it("should include mouseover, target, pet, and focus in fallback chain", function()
+            _G.mockState.numCharacterMacros = 0
+            simulateEvent("PLAYER_LOGIN")
+            local mainMacro = nil
+            for _, macro in ipairs(_G.mockState.macros) do
+                if macro.name == "LazyMD" then mainMacro = macro end
+            end
+            assert.is_truthy(mainMacro)
+            assert.is_truthy(mainMacro.body:match("@mouseover,help,nodead"))
+            assert.is_truthy(mainMacro.body:match("@target,help,nodead"))
+            assert.is_truthy(mainMacro.body:match("@pet,exists,nodead"))
+            assert.is_truthy(mainMacro.body:match("@focus,help,nodead"))
+            assert.is_truthy(mainMacro.body:match("Misdirection"))
+        end)
+
+        it("should use hunter icon for fallback macro", function()
+            _G.mockState.numCharacterMacros = 0
+            simulateEvent("PLAYER_LOGIN")
+            local mainMacro = nil
+            for _, macro in ipairs(_G.mockState.macros) do
+                if macro.name == "LazyMD" then mainMacro = macro end
+            end
+            assert.equal("ability_hunter_misdirection", mainMacro.icon)
+        end)
+    end)
+
+    describe("clear command (Hunter)", function()
+        before_each(function()
+            addon.currentTarget = "SomeTarget"
+            CreateMacro("LazyMD", "ability_hunter_misdirection", "old body", true)
+        end)
+
+        it("should reset macro to hunter fallback", function()
+            executeSlashCommand("clear")
+            assert.is_truthy(_G.mockState.macros[1].body:match("@mouseover"))
+            assert.is_truthy(_G.mockState.macros[1].body:match("@target"))
+            assert.is_truthy(_G.mockState.macros[1].body:match("@pet"))
+            assert.is_truthy(_G.mockState.macros[1].body:match("@focus"))
+            assert.is_truthy(_G.mockState.macros[1].body:match("Misdirection"))
+        end)
+
+        it("should not include @player in hunter fallback", function()
+            executeSlashCommand("clear")
+            assert.is_falsy(_G.mockState.macros[1].body:match("@player"))
+        end)
+    end)
+end)
+
+describe("LazyPI Addon (unsupported class)", function()
+    local addon
+
+    before_each(function()
+        addon = loadAddon("MAGE")
+    end)
+
+    describe("ADDON_LOADED", function()
+        it("should not print any message", function()
+            _G.mockState.printedMessages = {}
+            simulateEvent("ADDON_LOADED", "LazyPI")
+            assert.equal(0, #_G.mockState.printedMessages)
+        end)
+    end)
+
+    describe("PLAYER_LOGIN", function()
+        it("should not create any macros", function()
+            simulateEvent("PLAYER_LOGIN")
+            assert.equal(0, #_G.mockState.macros)
+        end)
+    end)
+
+    describe("slash commands", function()
+        it("should print unsupported on update", function()
+            executeSlashCommand("update")
+            assert.is_true(wasMessagePrinted("not supported"))
+        end)
+
+        it("should print unsupported on status", function()
+            executeSlashCommand("status")
+            assert.is_true(wasMessagePrinted("not supported"))
+        end)
+
+        it("should print unsupported on clear", function()
+            executeSlashCommand("clear")
+            assert.is_true(wasMessagePrinted("not supported"))
         end)
     end)
 end)

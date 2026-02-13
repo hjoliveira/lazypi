@@ -11,7 +11,9 @@ _G.mockState = {
     isMouseoverPlayer = true,
     isMouseoverFriendly = true,
     numMacros = 0,
+    numCharacterMacros = 0,
     inCombat = false,
+    playerClass = "PRIEST",
 }
 
 -- Reset all mock state
@@ -25,7 +27,9 @@ function _G.resetMockState()
         isMouseoverPlayer = true,
         isMouseoverFriendly = true,
         numMacros = 0,
+        numCharacterMacros = 0,
         inCombat = false,
+        playerClass = "PRIEST",
     }
     -- Reset SlashCmdList
     _G.SlashCmdList = {}
@@ -43,8 +47,9 @@ _G.print = function(...)
     table.insert(_G.mockState.printedMessages, message)
 end
 
--- Mock MAX_ACCOUNT_MACROS constant
+-- Mock macro limit constants
 _G.MAX_ACCOUNT_MACROS = 120
+_G.MAX_CHARACTER_MACROS = 18
 
 -- Mock InCombatLockdown
 function _G.InCombatLockdown()
@@ -77,6 +82,14 @@ function _G.UnitIsFriend(unit1, unit2)
     return false
 end
 
+-- Mock UnitClass
+function _G.UnitClass(unit)
+    if unit == "player" then
+        return _G.mockState.playerClass, _G.mockState.playerClass
+    end
+    return nil, nil
+end
+
 -- Mock GetMacroIndexByName
 function _G.GetMacroIndexByName(name)
     for i, macro in ipairs(_G.mockState.macros) do
@@ -89,7 +102,7 @@ end
 
 -- Mock GetNumMacros
 function _G.GetNumMacros()
-    return _G.mockState.numMacros, 0
+    return _G.mockState.numMacros, _G.mockState.numCharacterMacros
 end
 
 -- Mock EditMacro
@@ -110,7 +123,11 @@ function _G.CreateMacro(name, icon, body, perCharacter)
         perCharacter = perCharacter
     }
     table.insert(_G.mockState.macros, macro)
-    _G.mockState.numMacros = _G.mockState.numMacros + 1
+    if perCharacter then
+        _G.mockState.numCharacterMacros = _G.mockState.numCharacterMacros + 1
+    else
+        _G.mockState.numMacros = _G.mockState.numMacros + 1
+    end
     return #_G.mockState.macros
 end
 
@@ -157,9 +174,12 @@ end
 _G.SlashCmdList = {}
 
 -- Helper to load the addon
-function _G.loadAddon()
+function _G.loadAddon(playerClass)
     -- Reset state before loading
     _G.resetMockState()
+
+    -- Set player class (defaults to PRIEST)
+    _G.mockState.playerClass = playerClass or "PRIEST"
 
     -- Simulate the addon loading environment
     local addonName = "LazyPI"
