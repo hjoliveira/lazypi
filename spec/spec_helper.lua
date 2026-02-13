@@ -11,6 +11,7 @@ _G.mockState = {
     isMouseoverPlayer = true,
     isMouseoverFriendly = true,
     numMacros = 0,
+    numCharacterMacros = 0,
     inCombat = false,
     playerClass = "PRIEST",
 }
@@ -26,6 +27,7 @@ function _G.resetMockState()
         isMouseoverPlayer = true,
         isMouseoverFriendly = true,
         numMacros = 0,
+        numCharacterMacros = 0,
         inCombat = false,
         playerClass = "PRIEST",
     }
@@ -45,8 +47,9 @@ _G.print = function(...)
     table.insert(_G.mockState.printedMessages, message)
 end
 
--- Mock MAX_ACCOUNT_MACROS constant
+-- Mock macro limit constants
 _G.MAX_ACCOUNT_MACROS = 120
+_G.MAX_CHARACTER_MACROS = 18
 
 -- Mock InCombatLockdown
 function _G.InCombatLockdown()
@@ -99,7 +102,7 @@ end
 
 -- Mock GetNumMacros
 function _G.GetNumMacros()
-    return _G.mockState.numMacros, 0
+    return _G.mockState.numMacros, _G.mockState.numCharacterMacros
 end
 
 -- Mock EditMacro
@@ -120,7 +123,11 @@ function _G.CreateMacro(name, icon, body, perCharacter)
         perCharacter = perCharacter
     }
     table.insert(_G.mockState.macros, macro)
-    _G.mockState.numMacros = _G.mockState.numMacros + 1
+    if perCharacter then
+        _G.mockState.numCharacterMacros = _G.mockState.numCharacterMacros + 1
+    else
+        _G.mockState.numMacros = _G.mockState.numMacros + 1
+    end
     return #_G.mockState.macros
 end
 

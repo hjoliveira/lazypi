@@ -8,9 +8,16 @@ local addonName, addon = ...
 local LazyPI = CreateFrame("Frame", "LazyPIFrame")
 addon.frame = LazyPI
 
+-- Supported classes
+local supportedClasses = {
+    PRIEST = true,
+    HUNTER = true,
+}
+
 -- Addon state
 addon.macroName = "LazyPI"
 addon.currentTarget = nil
+addon.supported = false
 addon.spellName = nil
 addon.spellIcon = nil
 addon.fallbackCondition = nil
@@ -19,6 +26,13 @@ addon.fallbackChain = nil
 -- Configure spell based on player class
 local function ConfigureForClass()
     local _, playerClass = UnitClass("player")
+
+    if not supportedClasses[playerClass] then
+        addon.supported = false
+        return
+    end
+
+    addon.supported = true
 
     if playerClass == "HUNTER" then
         addon.spellName = "Misdirection"
@@ -42,6 +56,11 @@ end
 
 -- Update the LazyPI macro to target current mouseover
 function addon:UpdateMacroToMouseover()
+    if not self.supported then
+        self:Print("Your class is not supported")
+        return
+    end
+
     if InCombatLockdown() then
         self:Print("Cannot update macro during combat")
         return
@@ -77,12 +96,12 @@ function addon:UpdateMacroToMouseover()
         EditMacro(macroIndex, self.macroName, nil, macroBody)
         self:Print("Target set: " .. mouseoverName)
     else
-        local numGlobal = GetNumMacros()
-        if numGlobal < MAX_ACCOUNT_MACROS then
-            CreateMacro(self.macroName, self.spellIcon, macroBody, false)
+        local _, numCharacter = GetNumMacros()
+        if numCharacter < MAX_CHARACTER_MACROS then
+            CreateMacro(self.macroName, self.spellIcon, macroBody, true)
             self:Print("Created macro for: " .. mouseoverName)
         else
-            self:Print("Cannot create macro - maximum global macros reached!")
+            self:Print("Cannot create macro - maximum character macros reached!")
         end
     end
 end
@@ -93,9 +112,9 @@ local function CreateUpdateMacro()
     local macroIndex = GetMacroIndexByName(updateMacroName)
 
     if macroIndex == 0 then
-        local numGlobal = GetNumMacros()
-        if numGlobal < MAX_ACCOUNT_MACROS then
-            CreateMacro(updateMacroName, "INV_Misc_Gear_01", "/lpi update", false)
+        local _, numCharacter = GetNumMacros()
+        if numCharacter < MAX_CHARACTER_MACROS then
+            CreateMacro(updateMacroName, "INV_Misc_Gear_01", "/lpi update", true)
             addon:Print("Created '" .. updateMacroName .. "' macro.")
         end
     end
@@ -106,13 +125,13 @@ local function CreateMainMacro()
     local macroIndex = GetMacroIndexByName(addon.macroName)
 
     if macroIndex == 0 then
-        local numGlobal = GetNumMacros()
-        if numGlobal < MAX_ACCOUNT_MACROS then
+        local _, numCharacter = GetNumMacros()
+        if numCharacter < MAX_CHARACTER_MACROS then
             local macroBody = string.format(
                 "#showtooltip %s\n/cast %s %s",
                 addon.spellName, addon.fallbackChain, addon.spellName
             )
-            CreateMacro(addon.macroName, addon.spellIcon, macroBody, false)
+            CreateMacro(addon.macroName, addon.spellIcon, macroBody, true)
         end
     end
 end
@@ -122,11 +141,17 @@ function LazyPI:OnEvent(event, ...)
     if event == "ADDON_LOADED" then
         local loadedAddon = ...
         if loadedAddon == addonName then
-            addon:Print("Loaded. Mouseover a player and click 'LazyPI Update' to set target.")
+            if addon.supported then
+                addon:Print("Loaded. Mouseover a player and click 'LazyPI Update' to set target.")
+            else
+                addon:Print("Loaded. Your class is not supported.")
+            end
         end
     elseif event == "PLAYER_LOGIN" then
-        CreateMainMacro()
-        CreateUpdateMacro()
+        if addon.supported then
+            CreateMainMacro()
+            CreateUpdateMacro()
+        end
     end
 end
 
@@ -147,13 +172,19 @@ SlashCmdList["LAZYPI"] = function(msg)
         addon:UpdateMacroToMouseover()
 
     elseif cmd == "status" then
-        if addon.currentTarget then
+        if not addon.supported then
+            addon:Print("Your class is not supported")
+        elseif addon.currentTarget then
             addon:Print("Current target: " .. addon.currentTarget)
         else
             addon:Print("No target set")
         end
 
     elseif cmd == "clear" then
+        if not addon.supported then
+            addon:Print("Your class is not supported")
+            return
+        end
         if InCombatLockdown() then
             addon:Print("Cannot update macro during combat")
             return

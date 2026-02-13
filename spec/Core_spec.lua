@@ -40,6 +40,7 @@ describe("LazyPI Addon", function()
     describe("class detection", function()
         it("should configure Power Infusion for Priest", function()
             local priestAddon = loadAddon("PRIEST")
+            assert.is_true(priestAddon.supported)
             assert.equal("Power Infusion", priestAddon.spellName)
             assert.equal("spell_holy_powerinfusion", priestAddon.spellIcon)
             assert.equal("@player", priestAddon.fallbackCondition)
@@ -47,14 +48,16 @@ describe("LazyPI Addon", function()
 
         it("should configure Misdirection for Hunter", function()
             local hunterAddon = loadAddon("HUNTER")
+            assert.is_true(hunterAddon.supported)
             assert.equal("Misdirection", hunterAddon.spellName)
             assert.equal("ability_hunter_misdirection", hunterAddon.spellIcon)
             assert.equal("@pet,exists,nodead", hunterAddon.fallbackCondition)
         end)
 
-        it("should default to Power Infusion for unknown classes", function()
+        it("should not support unknown classes", function()
             local otherAddon = loadAddon("MAGE")
-            assert.equal("Power Infusion", otherAddon.spellName)
+            assert.is_false(otherAddon.supported)
+            assert.is_nil(otherAddon.spellName)
         end)
     end)
 
@@ -154,7 +157,7 @@ describe("LazyPI Addon", function()
             describe("and macro already exists", function()
                 before_each(function()
                     -- Create the LazyPI macro first
-                    CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", false)
+                    CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", true)
                 end)
 
                 it("should set currentTarget to the mouseover name", function()
@@ -181,6 +184,11 @@ describe("LazyPI Addon", function()
                         assert.equal("LazyPI", _G.mockState.macros[1].name)
                     end)
 
+                    it("should create macro as per-character", function()
+                        addon:UpdateMacroToMouseover()
+                        assert.is_true(_G.mockState.macros[1].perCharacter)
+                    end)
+
                     it("should set currentTarget", function()
                         addon:UpdateMacroToMouseover()
                         assert.equal("FriendlyPlayer", addon.currentTarget)
@@ -192,14 +200,14 @@ describe("LazyPI Addon", function()
                     end)
                 end)
 
-                describe("and max macros reached", function()
+                describe("and max character macros reached", function()
                     before_each(function()
-                        _G.mockState.numMacros = MAX_ACCOUNT_MACROS
+                        _G.mockState.numCharacterMacros = MAX_CHARACTER_MACROS
                     end)
 
                     it("should print error about max macros", function()
                         addon:UpdateMacroToMouseover()
-                        assert.is_true(wasMessagePrinted("maximum global macros reached"))
+                        assert.is_true(wasMessagePrinted("maximum character macros reached"))
                     end)
 
                     it("should not create a macro", function()
@@ -243,7 +251,7 @@ describe("LazyPI Addon", function()
         describe("clear command", function()
             before_each(function()
                 addon.currentTarget = "SomeTarget"
-                CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", false)
+                CreateMacro("LazyPI", "spell_holy_powerinfusion", "old body", true)
             end)
 
             describe("when in combat", function()
@@ -334,7 +342,7 @@ describe("LazyPI Addon", function()
 
         describe("PLAYER_LOGIN", function()
             it("should create macros when slots available", function()
-                _G.mockState.numMacros = 0
+                _G.mockState.numCharacterMacros = 0
                 simulateEvent("PLAYER_LOGIN")
                 -- Should have created both LazyPI and LazyPI Update macros
                 local foundLazyPI = false
@@ -345,6 +353,14 @@ describe("LazyPI Addon", function()
                 end
                 assert.is_true(foundLazyPI)
                 assert.is_true(foundLazyPIUpdate)
+            end)
+
+            it("should create macros as per-character", function()
+                _G.mockState.numCharacterMacros = 0
+                simulateEvent("PLAYER_LOGIN")
+                for _, macro in ipairs(_G.mockState.macros) do
+                    assert.is_true(macro.perCharacter)
+                end
             end)
         end)
     end)
@@ -431,7 +447,7 @@ describe("LazyPI Addon (Hunter)", function()
 
             describe("and macro already exists", function()
                 before_each(function()
-                    CreateMacro("LazyPI", "ability_hunter_misdirection", "old body", false)
+                    CreateMacro("LazyPI", "ability_hunter_misdirection", "old body", true)
                 end)
 
                 it("should set currentTarget to the mouseover name", function()
@@ -451,6 +467,11 @@ describe("LazyPI Addon (Hunter)", function()
                     addon:UpdateMacroToMouseover()
                     assert.equal(1, #_G.mockState.macros)
                     assert.equal("ability_hunter_misdirection", _G.mockState.macros[1].icon)
+                end)
+
+                it("should create macro as per-character", function()
+                    addon:UpdateMacroToMouseover()
+                    assert.is_true(_G.mockState.macros[1].perCharacter)
                 end)
             end)
         end)
@@ -494,7 +515,7 @@ describe("LazyPI Addon (Hunter)", function()
 
     describe("Fallback macro format (Hunter)", function()
         it("should include mouseover, target, pet, and focus in fallback chain", function()
-            _G.mockState.numMacros = 0
+            _G.mockState.numCharacterMacros = 0
             simulateEvent("PLAYER_LOGIN")
             local mainMacro = nil
             for _, macro in ipairs(_G.mockState.macros) do
@@ -509,7 +530,7 @@ describe("LazyPI Addon (Hunter)", function()
         end)
 
         it("should use hunter icon for fallback macro", function()
-            _G.mockState.numMacros = 0
+            _G.mockState.numCharacterMacros = 0
             simulateEvent("PLAYER_LOGIN")
             local mainMacro = nil
             for _, macro in ipairs(_G.mockState.macros) do
@@ -522,7 +543,7 @@ describe("LazyPI Addon (Hunter)", function()
     describe("clear command (Hunter)", function()
         before_each(function()
             addon.currentTarget = "SomeTarget"
-            CreateMacro("LazyPI", "ability_hunter_misdirection", "old body", false)
+            CreateMacro("LazyPI", "ability_hunter_misdirection", "old body", true)
         end)
 
         it("should reset macro to hunter fallback", function()
@@ -537,6 +558,45 @@ describe("LazyPI Addon (Hunter)", function()
         it("should not include @player in hunter fallback", function()
             executeSlashCommand("clear")
             assert.is_falsy(_G.mockState.macros[1].body:match("@player"))
+        end)
+    end)
+end)
+
+describe("LazyPI Addon (unsupported class)", function()
+    local addon
+
+    before_each(function()
+        addon = loadAddon("MAGE")
+    end)
+
+    describe("ADDON_LOADED", function()
+        it("should print unsupported class message", function()
+            simulateEvent("ADDON_LOADED", "LazyPI")
+            assert.is_true(wasMessagePrinted("not supported"))
+        end)
+    end)
+
+    describe("PLAYER_LOGIN", function()
+        it("should not create any macros", function()
+            simulateEvent("PLAYER_LOGIN")
+            assert.equal(0, #_G.mockState.macros)
+        end)
+    end)
+
+    describe("slash commands", function()
+        it("should print unsupported on update", function()
+            executeSlashCommand("update")
+            assert.is_true(wasMessagePrinted("not supported"))
+        end)
+
+        it("should print unsupported on status", function()
+            executeSlashCommand("status")
+            assert.is_true(wasMessagePrinted("not supported"))
+        end)
+
+        it("should print unsupported on clear", function()
+            executeSlashCommand("clear")
+            assert.is_true(wasMessagePrinted("not supported"))
         end)
     end)
 end)
