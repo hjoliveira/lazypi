@@ -1,4 +1,4 @@
-## Interface: 120000
+## Interface: 120001
 ## Title: LazyPI
 ## Notes: Simple spell macro management - mouseover a player and update to set them as target. Supports Power Infusion (Priest) and Misdirection (Hunter).
 ## Author: hjoliveira
