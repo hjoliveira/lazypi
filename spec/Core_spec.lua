@@ -52,6 +52,8 @@ describe("LazyPI Addon", function()
             assert.equal("Misdirection", hunterAddon.spellName)
             assert.equal("ability_hunter_misdirection", hunterAddon.spellIcon)
             assert.equal("@pet,exists,nodead", hunterAddon.fallbackCondition)
+            assert.equal("LazyMD", hunterAddon.macroName)
+            assert.equal("LazyMD Update", hunterAddon.updateMacroName)
         end)
 
         it("should not support unknown classes", function()
@@ -447,7 +449,7 @@ describe("LazyPI Addon (Hunter)", function()
 
             describe("and macro already exists", function()
                 before_each(function()
-                    CreateMacro("LazyPI", "ability_hunter_misdirection", "old body", true)
+                    CreateMacro("LazyMD", "ability_hunter_misdirection", "old body", true)
                 end)
 
                 it("should set currentTarget to the mouseover name", function()
@@ -463,9 +465,10 @@ describe("LazyPI Addon (Hunter)", function()
             end)
 
             describe("and macro does not exist", function()
-                it("should create a new macro with hunter icon", function()
+                it("should create a new macro named LazyMD with hunter icon", function()
                     addon:UpdateMacroToMouseover()
                     assert.equal(1, #_G.mockState.macros)
+                    assert.equal("LazyMD", _G.mockState.macros[1].name)
                     assert.equal("ability_hunter_misdirection", _G.mockState.macros[1].icon)
                 end)
 
@@ -519,7 +522,7 @@ describe("LazyPI Addon (Hunter)", function()
             simulateEvent("PLAYER_LOGIN")
             local mainMacro = nil
             for _, macro in ipairs(_G.mockState.macros) do
-                if macro.name == "LazyPI" then mainMacro = macro end
+                if macro.name == "LazyMD" then mainMacro = macro end
             end
             assert.is_truthy(mainMacro)
             assert.is_truthy(mainMacro.body:match("@mouseover,help,nodead"))
@@ -534,7 +537,7 @@ describe("LazyPI Addon (Hunter)", function()
             simulateEvent("PLAYER_LOGIN")
             local mainMacro = nil
             for _, macro in ipairs(_G.mockState.macros) do
-                if macro.name == "LazyPI" then mainMacro = macro end
+                if macro.name == "LazyMD" then mainMacro = macro end
             end
             assert.equal("ability_hunter_misdirection", mainMacro.icon)
         end)
@@ -543,7 +546,7 @@ describe("LazyPI Addon (Hunter)", function()
     describe("clear command (Hunter)", function()
         before_each(function()
             addon.currentTarget = "SomeTarget"
-            CreateMacro("LazyPI", "ability_hunter_misdirection", "old body", true)
+            CreateMacro("LazyMD", "ability_hunter_misdirection", "old body", true)
         end)
 
         it("should reset macro to hunter fallback", function()

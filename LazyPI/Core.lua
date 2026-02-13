@@ -15,7 +15,8 @@ local supportedClasses = {
 }
 
 -- Addon state
-addon.macroName = "LazyPI"
+addon.macroName = nil
+addon.updateMacroName = nil
 addon.currentTarget = nil
 addon.supported = false
 addon.spellName = nil
@@ -35,11 +36,15 @@ local function ConfigureForClass()
     addon.supported = true
 
     if playerClass == "HUNTER" then
+        addon.macroName = "LazyMD"
+        addon.updateMacroName = "LazyMD Update"
         addon.spellName = "Misdirection"
         addon.spellIcon = "ability_hunter_misdirection"
         addon.fallbackCondition = "@pet,exists,nodead"
         addon.fallbackChain = "[@mouseover,help,nodead][@target,help,nodead][@pet,exists,nodead][@focus,help,nodead]"
     else
+        addon.macroName = "LazyPI"
+        addon.updateMacroName = "LazyPI Update"
         addon.spellName = "Power Infusion"
         addon.spellIcon = "spell_holy_powerinfusion"
         addon.fallbackCondition = "@player"
@@ -108,14 +113,13 @@ end
 
 -- Create the update macro if it doesn't exist
 local function CreateUpdateMacro()
-    local updateMacroName = "LazyPI Update"
-    local macroIndex = GetMacroIndexByName(updateMacroName)
+    local macroIndex = GetMacroIndexByName(addon.updateMacroName)
 
     if macroIndex == 0 then
         local _, numCharacter = GetNumMacros()
         if numCharacter < MAX_CHARACTER_MACROS then
-            CreateMacro(updateMacroName, "INV_Misc_Gear_01", "/lpi update", true)
-            addon:Print("Created '" .. updateMacroName .. "' macro.")
+            CreateMacro(addon.updateMacroName, "INV_Misc_Gear_01", "/lpi update", true)
+            addon:Print("Created '" .. addon.updateMacroName .. "' macro.")
         end
     end
 end
@@ -141,7 +145,7 @@ function LazyPI:OnEvent(event, ...)
     if event == "ADDON_LOADED" then
         local loadedAddon = ...
         if loadedAddon == addonName and addon.supported then
-            addon:Print("Loaded. Mouseover a player and click 'LazyPI Update' to set target.")
+            addon:Print("Loaded. Mouseover a player and click '" .. addon.updateMacroName .. "' to set target.")
         end
     elseif event == "PLAYER_LOGIN" then
         if addon.supported then
