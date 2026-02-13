@@ -140,12 +140,8 @@ end
 function LazyPI:OnEvent(event, ...)
     if event == "ADDON_LOADED" then
         local loadedAddon = ...
-        if loadedAddon == addonName then
-            if addon.supported then
-                addon:Print("Loaded. Mouseover a player and click 'LazyPI Update' to set target.")
-            else
-                addon:Print("Loaded. Your class is not supported.")
-            end
+        if loadedAddon == addonName and addon.supported then
+            addon:Print("Loaded. Mouseover a player and click 'LazyPI Update' to set target.")
         end
     elseif event == "PLAYER_LOGIN" then
         if addon.supported then

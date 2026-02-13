@@ -570,9 +570,10 @@ describe("LazyPI Addon (unsupported class)", function()
     end)
 
     describe("ADDON_LOADED", function()
-        it("should print unsupported class message", function()
+        it("should not print any message", function()
+            _G.mockState.printedMessages = {}
             simulateEvent("ADDON_LOADED", "LazyPI")
-            assert.is_true(wasMessagePrinted("not supported"))
+            assert.equal(0, #_G.mockState.printedMessages)
         end)
     end)
 
