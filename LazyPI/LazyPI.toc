@@ -2,7 +2,7 @@
 ## Title: LazyPI
 ## Notes: Simple spell macro management - mouseover a player and update to set them as target. Supports Power Infusion (Priest) and Misdirection (Hunter).
 ## Author: hjoliveira
-## Version: 1.0.2
+## Version: 1.0.3
 ## IconTexture: Interface\Icons\spell_holy_powerinfusion
 
 Core.lua
